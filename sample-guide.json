@@ -1,0 +1,341 @@
+{
+  "app": "GitHub",
+  "website": "https://github.com",
+  "job": "Let users ask the agent to triage and open issues in their repositories",
+  "job_assumed": true,
+  "summary": "GitHub is one of the easier providers. You can register an OAuth app in a few minutes with no review, and it works for any GitHub user right away. The main decision is OAuth App vs GitHub App, since GitHub recommends GitHub Apps for finer-grained permissions.",
+  "verdict": {
+    "difficulty": "easy",
+    "difficulty_reason": "Self-serve registration, no app review for OAuth apps, works for all users immediately.",
+    "hands_on_time": "15-30 min",
+    "approval_wait": "None from GitHub. Restricted orgs need an owner's approval.",
+    "oauth_supported": "yes"
+  },
+  "composio": {
+    "managed_oauth": "yes",
+    "toolkit_available": "yes",
+    "note": "This is canned demo data. In live mode the agent checks Composio's docs.",
+    "evidence": "inferred"
+  },
+  "paths": [
+    {
+      "name": "Use Composio managed OAuth",
+      "when_to_choose": "Prototyping, or you don't need your own branding on the consent screen.",
+      "tradeoffs": "Consent screen shows Composio's app, not yours.",
+      "recommended": true
+    },
+    {
+      "name": "Register your own GitHub OAuth App",
+      "when_to_choose": "You want your own branding or need to control scopes.",
+      "tradeoffs": "OAuth App scopes are coarse (e.g. repo grants full repo access).",
+      "recommended": false
+    },
+    {
+      "name": "Register a GitHub App",
+      "when_to_choose": "You want fine-grained, per-repo permissions.",
+      "tradeoffs": "Different install flow; users install the app on repos.",
+      "recommended": false
+    }
+  ],
+  "prerequisites": [
+    {
+      "item": "A GitHub account",
+      "how_to_get": "Sign up free at github.com.",
+      "needs": [
+        {
+          "item": "An email you can check",
+          "ok_if": "Any email works; GitHub sends a code to confirm it.",
+          "later": null
+        },
+        {
+          "item": "Owner rights, if the app should belong to an organisation",
+          "ok_if": "Not needed if the app lives on your personal account.",
+          "later": "Org-owned apps need an org owner to approve."
+        }
+      ],
+      "actions": [
+        "Open **GitHub sign-up**.",
+        "Enter your email, a password and a username.",
+        "Type the code GitHub emails you."
+      ],
+      "url": "https://github.com/signup",
+      "time": "5 min",
+      "done_when": "You can sign in and see your GitHub dashboard.",
+      "blocks_route": true,
+      "evidence": "verified"
+    },
+    {
+      "item": "A Composio account",
+      "how_to_get": "Sign up free at composio.dev.",
+      "needs": [
+        {
+          "item": "A Google or GitHub login, or an email",
+          "ok_if": "Any of them works.",
+          "later": null
+        }
+      ],
+      "actions": [
+        "Open **Composio** and click **Get started**.",
+        "Sign in with Google or GitHub."
+      ],
+      "url": "https://composio.dev",
+      "time": "2 min",
+      "done_when": "You can see the Composio dashboard.",
+      "blocks_route": true,
+      "evidence": "inferred"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Open GitHub developer settings",
+      "detail": "Settings \u2192 Developer settings \u2192 OAuth Apps \u2192 New OAuth App.",
+      "url": "https://github.com/settings/developers",
+      "kind": "account",
+      "owner": "you",
+      "time": "2 min",
+      "minutes_min": 2,
+      "minutes_max": 2,
+      "waiting_on": null,
+      "done_when": "You can see the 'Register a new OAuth application' form.",
+      "evidence": "verified",
+      "agent_prompt": null,
+      "actions": [
+        "Sign in to **GitHub**.",
+        "Go to **Settings** \u2192 **Developer settings** \u2192 **OAuth Apps**."
+      ]
+    },
+    {
+      "title": "Register your GitHub app",
+      "detail": "Fill in application name, homepage URL and authorization callback URL. Use the callback URL your platform (e.g. Composio) gives you, exactly as shown.",
+      "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+      "kind": "register",
+      "owner": "you",
+      "time": "5 min",
+      "minutes_min": 5,
+      "minutes_max": 5,
+      "waiting_on": null,
+      "done_when": "The app page shows a Client ID.",
+      "evidence": "verified",
+      "agent_prompt": null,
+      "actions": [
+        "Click **New OAuth App**.",
+        "Enter your app's name and website.",
+        "Paste the **callback URL** from Composio, then click **Register**."
+      ]
+    },
+    {
+      "title": "Save your app's secret",
+      "detail": "Generate a client secret, copy it once, and store it with the Client ID in your secrets manager or Composio auth config.",
+      "url": null,
+      "kind": "credentials",
+      "owner": "you",
+      "time": "2 min",
+      "minutes_min": 2,
+      "minutes_max": 2,
+      "waiting_on": null,
+      "done_when": "Client ID and secret are saved somewhere other than your clipboard.",
+      "evidence": "verified",
+      "agent_prompt": null,
+      "actions": [
+        "Click **Generate a new client secret**.",
+        "Copy the **Client ID** and secret into Composio."
+      ]
+    },
+    {
+      "title": "Pick the permissions you need",
+      "detail": "For issue triage: 'repo' for private repos or 'public_repo' for public only. Request nothing else.",
+      "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+      "kind": "scopes",
+      "owner": "agent",
+      "time": "5 min",
+      "minutes_min": 5,
+      "minutes_max": 5,
+      "waiting_on": null,
+      "done_when": "Your scope list is written down and matches the job.",
+      "evidence": "verified",
+      "agent_prompt": "My agent needs to read and open issues in my users' GitHub repositories. List the minimum GitHub OAuth App scopes for that, explain each in one line, and tell me if public_repo is enough when users only have public repos.",
+      "actions": [
+        "Paste the prompt below into your coding agent.",
+        "Check its answer lists only what your agent needs."
+      ]
+    },
+    {
+      "title": "Test the connection",
+      "detail": "Authorize with a test account and call the Issues API once.",
+      "url": null,
+      "kind": "test",
+      "owner": "agent",
+      "time": "10-15 min",
+      "minutes_min": 10,
+      "minutes_max": 15,
+      "waiting_on": null,
+      "done_when": "An API call returns your test repo's issues.",
+      "evidence": "inferred",
+      "agent_prompt": "Write a short script using the Composio SDK that connects a test GitHub account through my GitHub auth config and lists the open issues in one repository. Print the result so I can see the connection works.",
+      "actions": [
+        "Paste the prompt below into your coding agent.",
+        "Run the script it writes and sign in with a test account."
+      ]
+    },
+    {
+      "title": "Get org approval (some orgs)",
+      "detail": "Organizations with OAuth app access restrictions must approve your app before members can use it with org repos. Send the owner a request from the authorization screen.",
+      "url": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions",
+      "kind": "wait",
+      "owner": "provider",
+      "time": "0-3 days",
+      "minutes_min": 0,
+      "minutes_max": 4320,
+      "waiting_on": "the org owner",
+      "done_when": "The org shows your app as approved.",
+      "evidence": "inferred",
+      "agent_prompt": null,
+      "actions": [
+        "Ask the GitHub org owner to approve your app.",
+        "Wait for their OK; carry on with other work meanwhile."
+      ]
+    }
+  ],
+  "scopes": [
+    {
+      "scope": "repo",
+      "why": "Read and write issues in private repos",
+      "sensitivity": "sensitive"
+    },
+    {
+      "scope": "public_repo",
+      "why": "Same, public repos only",
+      "sensitivity": "basic"
+    }
+  ],
+  "approval": {
+    "required": "no",
+    "process": "No GitHub review for OAuth apps. Orgs with OAuth app access restrictions require an org owner to approve your app.",
+    "wait": "None, or however long the org owner takes",
+    "evidence": "verified"
+  },
+  "blockers": [
+    {
+      "blocker": "Organization OAuth app access restrictions",
+      "impact": "medium",
+      "mitigation": "Tell users how to request org owner approval, or use a GitHub App installed on the org.",
+      "evidence": "verified"
+    }
+  ],
+  "alternatives": [
+    "GitHub App with fine-grained permissions",
+    "Fine-grained personal access tokens for single-user tools"
+  ],
+  "agent_can_do": [
+    "Pick minimal scopes for your job",
+    "Draft the registration form values",
+    "Write the test script"
+  ],
+  "you_must_do": [
+    "Sign in to GitHub and create the app",
+    "Store the client secret",
+    "Run the first authorization"
+  ],
+  "next_action": "Decide whether Composio's managed OAuth is acceptable for launch. If yes, you can skip registration entirely.",
+  "open_questions": [
+    "Demo data: not researched live."
+  ],
+  "sources": [
+    {
+      "title": "Creating an OAuth app - GitHub Docs",
+      "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+      "used_for": "Registration steps"
+    },
+    {
+      "title": "Scopes for OAuth apps - GitHub Docs",
+      "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
+      "used_for": "Scopes"
+    }
+  ],
+  "route": {
+    "choice": "own_oauth_app",
+    "name": "Register your own GitHub OAuth App",
+    "reason": "Demo data: you said the sign-in screen must show your brand, so you register your own app. It's self-serve and has no review.",
+    "hands_on_time": "15-30 min",
+    "wait": "None, unless an org restricts OAuth apps",
+    "cost": "Free"
+  },
+  "costs": [
+    {
+      "item": "GitHub OAuth App registration",
+      "amount": "free",
+      "when": "When you register",
+      "required": "yes",
+      "evidence": "verified"
+    },
+    {
+      "item": "Composio plan for your users' connections",
+      "amount": "unknown",
+      "when": "As your users connect",
+      "required": "depends",
+      "evidence": "unknown"
+    }
+  ],
+  "glossary": [
+    {
+      "term": "OAuth App",
+      "plain": "The registration that tells GitHub your product exists and is allowed to ask users for access."
+    },
+    {
+      "term": "callback URL",
+      "plain": "The web address GitHub sends users back to after they approve access; it must match exactly."
+    },
+    {
+      "term": "Client ID",
+      "plain": "A public name tag for your OAuth app."
+    },
+    {
+      "term": "client secret",
+      "plain": "A password for your OAuth app; keep it private."
+    }
+  ],
+  "friction_checks": [
+    {
+      "stage": "signup",
+      "check": "What does sign-up ask for?",
+      "answer": "Demo data: a GitHub account needs only an email, username and password, plus an email code.",
+      "handled_in": "A GitHub account",
+      "evidence": "inferred"
+    },
+    {
+      "stage": "dev_space",
+      "check": "Separate developer area or toggle?",
+      "answer": "Demo data: no. OAuth apps live under Settings \u2192 Developer settings on any account.",
+      "handled_in": "Open GitHub developer settings",
+      "evidence": "inferred"
+    },
+    {
+      "stage": "register",
+      "check": "Which app type and required fields?",
+      "answer": "Demo data: OAuth App; needs a name, homepage URL and callback URL. Any URL you own works as the homepage.",
+      "handled_in": "Register your GitHub app",
+      "evidence": "inferred"
+    },
+    {
+      "stage": "keys",
+      "check": "Is the secret shown only once?",
+      "answer": "Demo data: yes, copy it right away; you can generate a new one later.",
+      "handled_in": "Save your app's secret",
+      "evidence": "inferred"
+    },
+    {
+      "stage": "connect",
+      "check": "Test-user limits or warning screens?",
+      "answer": "Demo data: none; org-owned repos may need org approval.",
+      "handled_in": "Get org approval (some orgs)",
+      "evidence": "inferred"
+    },
+    {
+      "stage": "approval",
+      "check": "Review needed to go live?",
+      "answer": "Demo data: no review for OAuth apps.",
+      "handled_in": null,
+      "evidence": "inferred"
+    }
+  ]
+}
