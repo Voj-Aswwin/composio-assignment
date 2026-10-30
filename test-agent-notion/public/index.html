@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Notion agent</title>
+<style>
+:root{--bg:#fff;--text:#111;--muted:#6b6b6b;--border:#e6e6e6;--accent:#0b0bd1;--ok:#1a7f37;--warn:#9a5b00;--me:#eef0ff;--bot:#f4f4f4}
+@media (prefers-color-scheme:dark){:root{--bg:#111;--text:#ededed;--muted:#9a9a9a;--border:#2c2c2c;--accent:#6f6fff;--ok:#5fd38a;--warn:#f0b45a;--me:#1c1d3a;--bot:#1e1e1e}}
+*{box-sizing:border-box}body{font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--text);max-width:760px;margin:0 auto;padding:24px 16px;display:flex;flex-direction:column;min-height:100vh}
+h1{font-size:22px;margin:0 0 2px}.muted{color:var(--muted)}.small{font-size:13px}.ok{color:var(--ok)}.no{color:var(--warn)}
+#msgs{flex:1;display:flex;flex-direction:column;gap:8px;margin:16px 0;overflow-y:auto}
+.m{padding:8px 12px;border-radius:8px;max-width:85%;white-space:pre-wrap;word-wrap:break-word}.user{align-self:flex-end;background:var(--me)}.agent{align-self:flex-start;background:var(--bot)}
+.tool{align-self:flex-start;font:12.5px ui-monospace,Menlo,monospace;color:var(--muted);padding:0 4px}.error{align-self:flex-start;color:var(--warn)}
+form{display:flex;gap:8px;position:sticky;bottom:0;background:var(--bg);padding:8px 0}
+textarea{flex:1;font:inherit;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);resize:none}
+button{font:inherit;background:var(--accent);color:#fff;border:0;padding:8px 16px;border-radius:4px;cursor:pointer}button:disabled{opacity:.5}
+a{color:var(--accent)}
+</style></head><body>
+<h1>Notion agent</h1>
+<p class="muted small" style="margin:0">Reads and edits your Notion: search pages, read a page, update an existing page. It never creates pages.</p>
+<p class="small" style="margin:6px 0 0"><span id="conn"></span> · <span class="muted" id="model"></span></p>
+<div id="msgs"><p class="muted small" id="empty">Try "What can you do?", "What pages can you see?" or "Summarise my Meeting notes page".</p></div>
+<form id="f"><textarea id="t" rows="2" placeholder="Message the agent"></textarea><button id="go">Send</button></form>
+<script>
+const esc=(s)=>String(s).replace(/[&<>"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const box=document.getElementById("msgs");
+function show(messages,pending){if(!messages.length&&!pending)return;
+ box.innerHTML=messages.map(m=>`<div class="m ${m.role}">${m.role==="tool"?"↳ ":m.role==="error"?"Error: ":""}${esc(m.text)}</div>`).join("")+(pending?`<div class="m user">${esc(pending)}</div><div class="tool">Thinking…</div>`:"");box.scrollTop=box.scrollHeight;window.scrollTo(0,document.body.scrollHeight);}
+async function status(){const s=await fetch("/api/status").then(r=>r.json());
+ document.getElementById("conn").innerHTML=s.notion.connected?'<span class="ok">✓ Connected to Notion</span>':'<span class="no">○ Not connected to Notion</span> · <a href="/login">Sign in to Notion</a>';
+ document.getElementById("model").textContent=s.model?`Model: ${s.model}`:"No model key found";return s;}
+status().then(s=>show(s.messages));
+const t=document.getElementById("t"),go=document.getElementById("go");
+t.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();document.getElementById("f").requestSubmit();}});
+document.getElementById("f").onsubmit=async(e)=>{e.preventDefault();const text=t.value.trim();if(!text)return;t.value="";go.disabled=true;
+ const prev=(await status()).messages;show(prev,text);
+ try{const r=await fetch("/api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({text})}).then(r=>r.json());show(r.messages||[...prev,{role:"error",text:r.error||"Something went wrong"}]);}
+ catch(err){show([...prev,{role:"user",text},{role:"error",text:err.message}]);}
+ go.disabled=false;t.focus();status();};
+</script></body></html>

@@ -1,0 +1,8 @@
+{
+  "name": "bug-reporter-test-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Test agent for the stage-by-stage OAuth guide: opens GitHub issues for reported bugs.",
+  "scripts": { "start": "node --env-file-if-exists=.env server.js" }
+}

@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bug reporter agent</title>
+<style>
+:root{--bg:#fff;--text:#111;--muted:#6b6b6b;--border:#e6e6e6;--accent:#0b0bd1;--ok:#1a7f37;--warn:#9a5b00;--grey:#f4f4f4}
+@media (prefers-color-scheme:dark){:root{--bg:#111;--text:#ededed;--muted:#9a9a9a;--border:#2c2c2c;--accent:#6f6fff;--ok:#5fd38a;--warn:#f0b45a;--grey:#222}}
+body{font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--text);max-width:860px;margin:0 auto;padding:24px 16px}
+h1{font-size:24px;margin:0 0 4px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.card{border:1px solid var(--border);border-radius:4px;padding:16px}input,textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin:4px 0 10px}
+button{font:inherit;background:var(--accent);color:#fff;border:0;padding:8px 14px;border-radius:2px;cursor:pointer}
+ul{padding-left:18px;margin:6px 0}.ok{color:var(--ok)}.no{color:var(--warn)}.log div{font:12.5px/1.6 ui-monospace,Menlo,monospace;border-bottom:1px solid var(--border);padding:4px 0}
+</style></head><body>
+<h1>Bug reporter agent</h1><p class="muted">Report a bug and the agent opens an issue in your GitHub repo, once GitHub is connected through the guide.</p>
+<div class="grid">
+ <div class="card"><h3 style="margin-top:0">Report a bug</h3>
+  <label>Title<input id="t" value="Login button does nothing on Safari"></label>
+  <label>Details<textarea id="b" rows="4">Steps: open the site in Safari, click Login. Nothing happens.</textarea></label>
+  <button id="go">Send to the agent</button><p id="r" class="muted"></p></div>
+ <div class="card"><h3 style="margin-top:0">GitHub connection</h3><ul id="checks"></ul>
+  <p class="muted" style="font-size:13px">Open the guide app at <a href="http://localhost:3000">localhost:3000</a>, build a GitHub guide for "Open an issue in my repo when I report a bug", and pick <strong>Connect it yourself</strong>.</p></div>
+</div>
+<div class="card" style="margin-top:20px"><h3 style="margin-top:0">What the agent is doing</h3><div class="log" id="log"><span class="muted">Nothing yet.</span></div></div>
+<script>
+const esc=(s)=>String(s).replace(/[&<>"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function refresh(){const s=await fetch("/api/status").then(r=>r.json());
+ document.getElementById("checks").innerHTML=s.github.checks.map(c=>`<li class="${c.ok?"ok":"no"}">${c.ok?"✓":"○"} ${esc(c.item)}</li>`).join("");
+ document.getElementById("log").innerHTML=s.log.length?s.log.slice().reverse().map(l=>`<div>${esc(l.at.slice(11,19))} · ${esc(l.kind)} · ${esc(l.text)}</div>`).join(""):'<span class="muted">Nothing yet.</span>';}
+document.getElementById("go").onclick=async()=>{const r=await fetch("/api/bug",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({title:document.getElementById("t").value,body:document.getElementById("b").value})}).then(r=>r.json());
+ document.getElementById("r").textContent=r.ok?"Issue opened.":r.missing?"Not connected yet: see the checklist.":(r.error||"Something went wrong.");refresh();};
+refresh();setInterval(refresh,4000);
+</script></body></html>

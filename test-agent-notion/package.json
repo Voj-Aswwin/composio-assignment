@@ -1,0 +1,8 @@
+{
+  "name": "notion-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An agent that connects to Notion to read and edit its contents.",
+  "scripts": { "start": "node --env-file-if-exists=.env server.js" }
+}
