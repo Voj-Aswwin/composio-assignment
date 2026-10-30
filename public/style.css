@@ -445,7 +445,7 @@ button.secondary:hover:not(:disabled) { filter: none; background: var(--grey-bg)
   .shell { grid-template-columns: 1fr; }
   .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 8px 12px; border-right: 0; border-bottom: 1px solid var(--border); }
   .side .brand { border: 0; padding: 4px 0; margin: 0 auto 0 0; }
-  .side-nav { display: flex; } .nav-how, .side-h, .side .library { display: none; }
+  .side-nav { display: flex; } .nav-how, .nav-ext, .side-h, .side .library { display: none; }
   main { padding: 24px 16px 56px; }
   h1 { font-size: 32px; }
   .work-grid { grid-template-columns: 1fr; }
