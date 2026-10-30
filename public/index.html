@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Connect Guides</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="shell">
+  <aside class="side">
+    <a href="/" class="brand" data-nav><span class="logo" aria-hidden="true">◧</span> Connect Guides <span class="tag">BETA</span></a>
+    <nav class="side-nav" aria-label="Main">
+      <a href="/" data-nav class="nav-new">＋ New guide</a>
+      <a href="/evidence" data-nav>✓ What we tested</a>
+      <details class="nav-how"><summary>? How it works</summary>
+        <ol class="small"><li>Tell us the app and what your agent should do.</li><li>Answer a few choices, one at a time.</li><li>Follow the steps. Your coding agent does the ones marked <strong>Your agent</strong>.</li><li>Stuck? Paste the error and we add fix steps.</li></ol>
+      </details>
+    </nav>
+    <h4 class="side-h">My guides</h4>
+    <ul id="library" class="library"><li class="muted small">No guides yet.</li></ul>
+  </aside>
+
+  <main>
+    <div id="demo-banner" class="banner hidden">Demo mode: no API key set, so every request returns a canned sample guide. Add a free <code>GEMINI_API_KEY</code> (or an <code>ANTHROPIC_API_KEY</code>) to <code>.env</code> to research live.</div>
+
+    <section id="home">
+      <div class="hero">
+        <h1>Get your agent's OAuth app<br />ready for your users.</h1>
+        <p class="lede">Look up an app to see how hard setup is, how long approval takes, and what you and your coding agent do next. Not in the library? We research it live.</p>
+      </div>
+
+      <form id="form" class="card">
+        <label>App
+          <input id="app" name="app" placeholder="e.g. Gmail, HubSpot, notion.so" required autocomplete="off" />
+        </label>
+        <label>What should your agent do with it?
+          <textarea id="job" name="job" rows="2" required placeholder="e.g. Read new invoice emails and log them in a spreadsheet"></textarea>
+        </label>
+        <div class="chips examples" aria-label="Examples">
+          <button type="button" class="chip" data-example="Read new emails and draft replies for me to approve">Read emails, draft replies</button>
+          <button type="button" class="chip" data-example="Create issues from bug reports people post in chat">Create issues from chat</button>
+          <button type="button" class="chip" data-example="Add new leads from my inbox as contacts if they don't exist yet">Add leads as contacts</button>
+          <button type="button" class="chip" data-example="Post a weekly summary of my tasks to a channel">Post a weekly summary</button>
+        </div>
+        <div class="form-foot"><button type="submit" id="go">Research this app →</button><span class="small muted">About 1-3 minutes, live. Nothing changes in your accounts.</span></div>
+      </form>
+
+      <section id="ready" class="hidden">
+        <div class="lib-h"><h2>Ready-made guides</h2><input id="lib-filter" class="lib-search" placeholder="Filter guides" aria-label="Filter guides" /></div>
+        <div id="lib-grid" class="lib-grid"></div>
+      </section>
+
+      <div id="progress" class="hidden" aria-live="polite"></div>
+
+      <section id="fit" class="hidden"></section>
+    </section>
+
+    <section id="guide" class="hidden"></section>
+  </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
