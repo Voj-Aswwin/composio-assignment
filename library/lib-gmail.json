@@ -1,0 +1,593 @@
+{
+  "id": "lib-gmail",
+  "created_at": "2026-10-30T12:06:26.787Z",
+  "model": "parallel chat research + parallel json",
+  "input": {
+    "app": "Gmail",
+    "job": "Read the user's new emails and draft replies for them to approve",
+    "answers": {
+      "users": "my_users",
+      "connect_via": "direct"
+    },
+    "route": "Use your own app"
+  },
+  "guide": {
+    "app": "Gmail",
+    "website": "https://gmail.com/",
+    "job": "Read the user's new emails and draft replies for them to approve",
+    "job_assumed": false,
+    "summary": "To build an AI agent that reads emails and drafts replies for external users, you must register a Google Cloud project, configure OAuth credentials with restricted email scopes, and submit your application for Google security verification before public launch.",
+    "verdict": {
+      "difficulty": "hard",
+      "difficulty_reason": "Requires registering a Google Cloud project, managing OAuth tokens, and undergoing formal Google verification for restricted scopes before public user sign-ins.",
+      "hands_on_time": "30-60 min",
+      "approval_wait": "2-6 weeks for public launch",
+      "oauth_supported": "yes"
+    },
+    "composio": {
+      "managed_oauth": "yes",
+      "toolkit_available": "yes",
+      "note": "Composio has a Gmail toolkit with 61 actions and managed auth, but you chose to use your own custom OAuth app implementation.",
+      "evidence": "verified",
+      "api_checked": true,
+      "tools_count": 61
+    },
+    "route": {
+      "choice": "own_oauth_app",
+      "name": "Register your own Google OAuth app",
+      "reason": "You chose to register your own Google OAuth app and handle tokens manually instead of using managed authentication.",
+      "hands_on_time": "30-45 min",
+      "wait": "2-6 weeks",
+      "cost": "Free"
+    },
+    "costs": [
+      {
+        "item": "Google Cloud Platform Project",
+        "amount": "free",
+        "when": "at registration",
+        "required": "yes",
+        "evidence": "verified"
+      }
+    ],
+    "paths": [
+      {
+        "name": "Use Composio managed OAuth",
+        "when_to_choose": "If you want to skip manual OAuth app setup and token management.",
+        "tradeoffs": "Relies on a third-party managed layer instead of direct control.",
+        "recommended": false
+      }
+    ],
+    "prerequisites": [
+      {
+        "item": "A Google account",
+        "how_to_get": "Sign up for a Google account to access the Google Cloud Console.",
+        "needs": [
+          {
+            "item": "Google Account credentials",
+            "ok_if": "Any standard Gmail or Google Workspace account works.",
+            "later": null
+          }
+        ],
+        "actions": [
+          "Go to the Google Cloud Console and **Sign in**"
+        ],
+        "url": "https://console.cloud.google.com/",
+        "time": "5 min",
+        "done_when": "You are logged into the Google Cloud Console dashboard.",
+        "blocks_route": true,
+        "evidence": "verified"
+      }
+    ],
+    "friction_checks": [
+      {
+        "stage": "register",
+        "check": "Do you have a Google Cloud project?",
+        "answer": "Yes, required to generate client ID and client secret.",
+        "handled_in": "Create Google Cloud Project",
+        "evidence": "verified"
+      },
+      {
+        "stage": "scopes",
+        "check": "Are restricted scopes required?",
+        "answer": "Yes, reading email bodies and managing drafts requires restricted scopes.",
+        "handled_in": "Configure OAuth Consent Screen",
+        "evidence": "verified"
+      },
+      {
+        "stage": "approval",
+        "check": "Is Google verification required for public launch?",
+        "answer": "Yes, because the app requests restricted scopes for external users.",
+        "handled_in": "Submit App for Google Verification",
+        "evidence": "verified"
+      }
+    ],
+    "steps": [
+      {
+        "title": "Create Google Cloud Project",
+        "stage": "register",
+        "actions": [
+          "Open Google Cloud Console and click **Create Project**",
+          "Name your project and click **Create**"
+        ],
+        "detail": "A Google Cloud project acts as the container for your OAuth credentials and API configurations.",
+        "url": "https://console.cloud.google.com/",
+        "kind": "register",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "The new project is active in the Cloud Console dropdown.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Configure OAuth Consent Screen",
+        "stage": "configure",
+        "actions": [
+          "Navigate to **APIs & Services** > **OAuth consent screen**",
+          "Select **External** user type and click **Create**",
+          "Fill in app information and click **Save and Continue**"
+        ],
+        "detail": "Defines how your application appears to users during the consent flow.",
+        "url": "https://console.cloud.google.com/",
+        "kind": "configure",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "10 min",
+        "minutes_min": 10,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "The OAuth consent screen is configured and saved.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Add Gmail API Scopes",
+        "stage": "scopes",
+        "actions": [
+          "Click **Add or Remove Scopes** on the consent screen setup",
+          "Select https://www.googleapis.com/auth/gmail.readonly and https://www.googleapis.com/auth/gmail.compose",
+          "Click **Update** and save your changes"
+        ],
+        "detail": "Grants your app permission to view messages and manage drafts on behalf of users.",
+        "url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+        "kind": "scopes",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "The required Gmail API scopes are added to your project configuration.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Create OAuth Client Credentials",
+        "stage": "credentials",
+        "actions": [
+          "Go to **Credentials** and click **Create Credentials**",
+          "Select **OAuth client ID** and choose **Web application**",
+          "Add your redirect URI and click **Create**"
+        ],
+        "detail": "Generates your client ID and client secret needed for authenticating API requests.",
+        "url": "https://console.cloud.google.com/",
+        "kind": "credentials",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "Client ID and Client Secret are displayed and saved securely.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Submit App for Google Verification",
+        "stage": "approval",
+        "actions": [
+          "Go to the **OAuth consent screen** and click **Publish App**",
+          "Submit your app for verification review regarding restricted scopes",
+          "Wait for Google compliance approval"
+        ],
+        "detail": "Because your app uses restricted scopes to access user emails, Google must verify it before external users can sign in beyond testing limits.",
+        "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+        "kind": "submit",
+        "owner": "provider",
+        "agent_prompt": null,
+        "time": "2-6 weeks",
+        "minutes_min": 20160,
+        "minutes_max": 60480,
+        "waiting_on": "Google Trust & Safety",
+        "done_when": "Google approves your application verification request.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Implement OAuth Sign-In Code",
+        "stage": "code",
+        "actions": [
+          "Write backend code to handle the OAuth redirect flow and token exchange",
+          "Store user refresh tokens securely in your database"
+        ],
+        "detail": "Write code to handle user authentication and store tokens securely.",
+        "url": null,
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write an OAuth2 authentication flow in Node.js/Python that accepts Google client ID and secret, handles the callback redirect URI, and securely saves refresh tokens for users.",
+        "time": "20 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "waiting_on": null,
+        "done_when": "Users can successfully authenticate through the OAuth flow.",
+        "evidence": "inferred"
+      },
+      {
+        "title": "Build Email Reading and Drafting Logic",
+        "stage": "code",
+        "actions": [
+          "Integrate Gmail API calls to fetch new messages using gmail.readonly",
+          "Integrate Gmail API calls to create drafts using gmail.compose"
+        ],
+        "detail": "Implement agent logic to fetch new messages and create draft replies.",
+        "url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Implement code using the Gmail API to retrieve unread messages using 'https://www.googleapis.com/auth/gmail.readonly' and generate a draft reply using 'https://www.googleapis.com/auth/gmail.compose'.",
+        "time": "30 min",
+        "minutes_min": 20,
+        "minutes_max": 45,
+        "waiting_on": null,
+        "done_when": "Agent successfully reads incoming emails and creates draft responses.",
+        "evidence": "inferred",
+        "link_status": "ok"
+      },
+      {
+        "title": "Test Integration End-to-End",
+        "stage": "test",
+        "actions": [
+          "Run the agent in a test environment",
+          "Verify that external users can connect their accounts and drafts are created properly"
+        ],
+        "detail": "Perform end-to-end testing of the complete user sign-in and email agent loop.",
+        "url": null,
+        "kind": "test",
+        "owner": "you",
+        "agent_prompt": "Run integration tests simulating user login, token refresh, email fetching, and draft creation.",
+        "time": "15 min",
+        "minutes_min": 10,
+        "minutes_max": 20,
+        "waiting_on": null,
+        "done_when": "All test assertions pass successfully.",
+        "evidence": "inferred"
+      },
+      {
+        "title": "Make your agent do the job",
+        "actions": [
+          "Copy the prompt below into your coding agent.",
+          "Run it once with your own account."
+        ],
+        "detail": "This is the point of the prototype: your agent using the connection.",
+        "url": null,
+        "kind": "test",
+        "owner": "agent",
+        "time": "15-30 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "done_when": "Your agent completed the job in Gmail for your own account.",
+        "evidence": "inferred",
+        "agent_prompt": "First check the connect step really happened: the Gmail tool exists and is registered with my agent.  If anything is missing, stop and tell me what. Otherwise run my agent once on this job with my own account: Read the user's new emails and draft replies for them to approve. Show me what changed in Gmail."
+      }
+    ],
+    "glossary": [
+      {
+        "term": "redirect URI",
+        "plain": "The URL where the provider sends users after they authorize your application."
+      },
+      {
+        "term": "restricted scope",
+        "plain": "A high-privilege permission tier that grants access to sensitive user data and requires formal verification."
+      }
+    ],
+    "scopes": [
+      {
+        "scope": "https://www.googleapis.com/auth/gmail.readonly",
+        "why": "Required to read incoming email messages and view settings.",
+        "sensitivity": "restricted"
+      },
+      {
+        "scope": "https://www.googleapis.com/auth/gmail.compose",
+        "why": "Required to manage drafts and create email responses.",
+        "sensitivity": "restricted"
+      }
+    ],
+    "approval": {
+      "required": "yes",
+      "process": "Apps requesting restricted scopes must complete Google security verification and CASA assessment before public release.",
+      "wait": "2-6 weeks",
+      "evidence": "verified"
+    },
+    "blockers": [
+      {
+        "blocker": "Google verification wait time",
+        "impact": "high",
+        "mitigation": "Use Google Cloud testing mode with up to 100 test users while waiting for formal verification.",
+        "step": 4,
+        "evidence": "verified"
+      }
+    ],
+    "alternatives": [
+      "Use Composio managed authentication to bypass direct OAuth app registration."
+    ],
+    "agent_can_do": [
+      "Implement OAuth callback handling and token exchange logic",
+      "Call Gmail API endpoints to read messages and create draft responses"
+    ],
+    "you_must_do": [
+      "Create the Google Cloud project and configure OAuth consent screens",
+      "Submit the app for Google security verification"
+    ],
+    "next_action": "Open the Google Cloud Console to create your project and configure the OAuth consent screen.",
+    "open_questions": [
+      "Exact turnaround time for Google security review varies based on app complexity."
+    ],
+    "sources": [
+      {
+        "title": "Choose Gmail API scopes | Google for Developers",
+        "url": "https://developers.google.com/workspace/gmail/api/auth/scopes",
+        "used_for": "Scope definitions and sensitivity levels"
+      },
+      {
+        "title": "Restricted scope verification | App verification to use Google Authorization APIs | Google for Developers",
+        "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification",
+        "used_for": "Verification requirements and security assessments"
+      },
+      {
+        "title": "Google API Services User Data Policy | Google for Developers",
+        "url": "https://developers.google.com/terms/api-services-user-data-policy",
+        "used_for": "Data handling policies"
+      }
+    ],
+    "searched_urls": [],
+    "written_by": "parallel chat research + parallel json",
+    "fit": {
+      "actions": [
+        {
+          "action": "read new emails",
+          "needs_trigger": true
+        },
+        {
+          "action": "draft email replies",
+          "needs_trigger": false
+        }
+      ],
+      "dimensions": [
+        {
+          "key": "auth_type",
+          "applies": "yes",
+          "note": "Uses OAuth 2.0 for secure user sign-in."
+        },
+        {
+          "key": "registration",
+          "applies": "yes",
+          "note": "Requires a developer account and project setup if building your own sign-in."
+        },
+        {
+          "key": "review",
+          "applies": "depends",
+          "note": "None for your own account; Google verification (2-6 weeks) before others can sign in."
+        },
+        {
+          "key": "distribution_limits",
+          "applies": "depends",
+          "note": "Up to 100 test users in testing mode; unverified published apps stop at 100 users."
+        },
+        {
+          "key": "per_customer_instance",
+          "applies": "yes",
+          "note": "Each user connects their own Gmail account."
+        },
+        {
+          "key": "admin_consent",
+          "applies": "no",
+          "note": "Standard personal Gmail accounts do not require workspace admin consent."
+        },
+        {
+          "key": "tokens",
+          "applies": "yes",
+          "note": "Requires token refresh management; test tokens expire in 7 days."
+        },
+        {
+          "key": "scopes_vs_actions",
+          "applies": "yes",
+          "note": "Requires restricted scopes to read and draft emails."
+        },
+        {
+          "key": "sandbox_vs_production",
+          "applies": "yes",
+          "note": "Testing mode limits users to 100 before public verification."
+        },
+        {
+          "key": "triggers",
+          "applies": "yes",
+          "note": "Requires a trigger event to detect new incoming emails."
+        },
+        {
+          "key": "composio_layer",
+          "applies": "yes",
+          "note": "Composio handles sign-in and token refreshes automatically."
+        }
+      ],
+      "composio": {
+        "toolkit_available": "yes",
+        "toolkit_slug": "gmail",
+        "covers_use_case": "yes",
+        "matching_actions": [
+          "gmail_get_message",
+          "gmail_create_draft"
+        ],
+        "managed_auth": "yes",
+        "note": "Composio has a Gmail toolkit with 61 actions; Composio can handle the sign-in for you.",
+        "evidence": "verified",
+        "tools_count": 61,
+        "catalog_checked": true,
+        "api_checked": true
+      },
+      "answers": {
+        "users": "my_users",
+        "connect_via": "direct"
+      },
+      "decisions": [
+        {
+          "id": "users",
+          "title": "Who will connect their account?",
+          "why_it_matters": "Other people signing in can mean an approval wait.",
+          "show_if": null,
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "my_users",
+              "label": "My users",
+              "what_it_means": "Other people connect their own accounts to your agent.",
+              "pros": [
+                "Ready to launch"
+              ],
+              "cons": [
+                "May need the app's approval"
+              ],
+              "time": "Hours",
+              "wait": "Varies by app",
+              "cost": "Usually free",
+              "recommended": true,
+              "recommended_reason": "You're building for other people, so the guide covers what it takes to launch."
+            },
+            {
+              "value": "just_me",
+              "label": "Just me",
+              "what_it_means": "Only your own account, to try the idea first.",
+              "pros": [
+                "Fastest start",
+                "Usually no approval"
+              ],
+              "cons": [
+                "Others can't connect yet"
+              ],
+              "time": "Under an hour",
+              "wait": "Usually none",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "id": "connect_via",
+          "title": "How will your agent connect to this app?",
+          "why_it_matters": "Chooses between instant setup or building custom sign-in flows.",
+          "show_if": null,
+          "options": [
+            {
+              "value": "composio",
+              "label": "Use Composio",
+              "what_it_means": "Composio manages sign-in and tokens for you.",
+              "pros": [
+                "Working in minutes",
+                "Managed token refresh",
+                "No review needed"
+              ],
+              "cons": [
+                "Depends on external platform",
+                "Plan limits apply"
+              ],
+              "time": "Minutes",
+              "wait": "None",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "Bypasses weeks of OAuth setup and Google verification for prototypes and launches."
+            },
+            {
+              "value": "direct",
+              "label": "Use your own app",
+              "what_it_means": "You register your own Google OAuth app and handle tokens.",
+              "pros": [
+                "Full control over tokens",
+                "Custom branding screen"
+              ],
+              "cons": [
+                "Weeks of setup",
+                "Google verification required",
+                "You fix token expiry"
+              ],
+              "time": "Days to weeks",
+              "wait": "2 to 6 weeks",
+              "cost": "Free",
+              "recommended": false
+            }
+          ],
+          "evidence": "verified"
+        },
+        {
+          "id": "branding",
+          "title": "Whose name should users see at sign-in?",
+          "why_it_matters": "Your own name means your own approval.",
+          "show_if": {
+            "connect_via": "composio",
+            "users": "my_users"
+          },
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "composio_name",
+              "label": "Composio's name",
+              "what_it_means": "Users sign in through Composio's Gmail app, already approved.",
+              "pros": [
+                "No app to register",
+                "No review for you"
+              ],
+              "cons": [
+                "Composio's name on screen"
+              ],
+              "time": "Minutes",
+              "wait": "None",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "It skips registering and reviewing your own app. You can switch to your own later."
+            },
+            {
+              "value": "own_app",
+              "label": "Your own app",
+              "what_it_means": "Register your own Gmail app and plug it into Composio.",
+              "pros": [
+                "Your name on screen",
+                "Your own limits"
+              ],
+              "cons": [
+                "You go through review"
+              ],
+              "time": "Hours",
+              "wait": "Depends on the app",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        }
+      ]
+    },
+    "link_check": {
+      "at": "2026-10-30T12:06:26.784Z",
+      "total": 10,
+      "ok": 10,
+      "unverified": 0,
+      "fixed": 0,
+      "removed": 0
+    }
+  },
+  "library": {
+    "order": 5,
+    "challenge": "Restricted scopes: Google verification and a security assessment.",
+    "tested": "Sources checked",
+    "built_from": "gmail-mvuxf943"
+  }
+}

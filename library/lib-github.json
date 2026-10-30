@@ -1,0 +1,520 @@
+{
+  "id": "lib-github",
+  "created_at": "2026-10-30T12:01:55.354Z",
+  "model": "parallel chat research + parallel json",
+  "input": {
+    "app": "GitHub",
+    "job": "Open an issue in the user's repository when they report a bug to the agent",
+    "answers": {
+      "users": "my_users",
+      "connect_via": "direct"
+    },
+    "route": "Direct OAuth App"
+  },
+  "guide": {
+    "app": "GitHub",
+    "website": "https://github.com",
+    "job": "Open an issue in the user's repository when they report a bug to the agent",
+    "job_assumed": true,
+    "summary": "To let your users connect their GitHub accounts to your agent, register a standard GitHub OAuth app, handle the web application flow to obtain access tokens, and use the GitHub REST API to create issues. Be aware that organization-level repositories may require organization owner approval due to default access restrictions.",
+    "verdict": {
+      "difficulty": "easy",
+      "difficulty_reason": "Registering an OAuth app is completely self-serve with no review required by GitHub.",
+      "hands_on_time": "30-45 min",
+      "approval_wait": "none for personal accounts; depends on organization owners for organization repositories",
+      "oauth_supported": "yes"
+    },
+    "composio": {
+      "managed_oauth": "yes",
+      "toolkit_available": "yes",
+      "note": "Composio has a GitHub toolkit with 877 actions and managed auth as an alternative route.",
+      "evidence": "verified",
+      "api_checked": true,
+      "tools_count": 877
+    },
+    "route": {
+      "choice": "own_oauth_app",
+      "name": "Direct OAuth App",
+      "reason": "You registered your own GitHub OAuth app to handle user authentication and tokens manually.",
+      "hands_on_time": "30-45 min",
+      "wait": "none",
+      "cost": "Free"
+    },
+    "costs": [
+      {
+        "item": "GitHub Account",
+        "amount": "free",
+        "when": "sign up",
+        "required": "yes",
+        "evidence": "verified"
+      }
+    ],
+    "paths": [
+      {
+        "name": "Use Composio managed OAuth",
+        "when_to_choose": "If you want to skip manual OAuth app configuration and token handling.",
+        "tradeoffs": "Relies on a third-party managed auth layer rather than your own registered OAuth app.",
+        "recommended": false
+      },
+      {
+        "name": "Personal Access Token Shortcut",
+        "when_to_choose": "For local testing or single-user proof of concepts.",
+        "tradeoffs": "Does not support multiple external users connecting their own accounts.",
+        "recommended": false
+      }
+    ],
+    "prerequisites": [
+      {
+        "item": "GitHub Account",
+        "how_to_get": "Sign up for a free account on the GitHub website.",
+        "needs": [
+          {
+            "item": "Valid email address",
+            "ok_if": "Any functional email is accepted",
+            "later": null
+          }
+        ],
+        "actions": [
+          "Go to **GitHub** and click **Sign up**"
+        ],
+        "url": "https://github.com",
+        "time": "5 min",
+        "done_when": "You are logged into your GitHub dashboard",
+        "blocks_route": true,
+        "evidence": "verified"
+      }
+    ],
+    "friction_checks": [
+      {
+        "stage": "register",
+        "check": "Is app registration self-serve?",
+        "answer": "Yes, registering an OAuth app is self-serve with no review.",
+        "handled_in": "Register your GitHub OAuth application",
+        "evidence": "verified"
+      },
+      {
+        "stage": "approval",
+        "check": "Do organizations block OAuth apps by default?",
+        "answer": "New organizations have OAuth app access restrictions enabled by default, requiring owner approval.",
+        "handled_in": "Request organization owner approval if needed",
+        "evidence": "verified"
+      }
+    ],
+    "steps": [
+      {
+        "title": "Register your GitHub OAuth application",
+        "stage": "register",
+        "actions": [
+          "Go to **Developer settings** under your user settings",
+          "Click **OAuth apps** and then **New OAuth App**",
+          "Fill out application details and callback URL, then click **Register application**"
+        ],
+        "detail": "Creating your own OAuth app gives you client credentials to start the web application flow for your users.",
+        "url": "https://github.com/settings/developers",
+        "kind": "register",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "10 min",
+        "minutes_min": 5,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "You receive a Client ID and Client Secret for your application",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Configure environment variables securely",
+        "stage": "dev_space",
+        "actions": [
+          "Copy your **Client ID** and **Client Secret** into your local environment file"
+        ],
+        "detail": "Your agent code requires these credentials to securely initiate the OAuth web application flow and exchange codes for tokens.",
+        "url": null,
+        "kind": "configure",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 3,
+        "minutes_max": 7,
+        "waiting_on": null,
+        "done_when": "Client ID and Client Secret are accessible in your backend configuration",
+        "evidence": "verified"
+      },
+      {
+        "title": "Implement OAuth web application flow",
+        "stage": "scopes",
+        "actions": [
+          "Write code to redirect users to GitHub for authorization with requested scopes",
+          "Handle the callback redirect to exchange the temporary code for an access token via POST"
+        ],
+        "detail": "Users must grant your app access so your agent can obtain a temporary code and trade it for an OAuth token.",
+        "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write the server endpoint using the GitHub web application flow to redirect users to https://github.com/login/oauth/authorize with client_id and scopes (repo, public_repo), and handle the callback at POST https://github.com/login/oauth/access_token to exchange the code for an access token.",
+        "time": "15 min",
+        "minutes_min": 10,
+        "minutes_max": 25,
+        "waiting_on": null,
+        "done_when": "Your backend successfully receives and stores user access tokens",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Call REST API to create issues",
+        "stage": "connect",
+        "actions": [
+          "Implement the logic using the user's OAuth token to submit bug report data to the issues endpoint"
+        ],
+        "detail": "Using the acquired token, your agent can make authenticated requests to open issues on the user's repository.",
+        "url": "https://docs.github.com/en/rest",
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write a function that takes a user's OAuth token, repository owner, repository name, title, and body, and sends a POST request to https://api.github.com/repos/{owner}/{repo}/issues with the Authorization Bearer header set.",
+        "time": "15 min",
+        "minutes_min": 10,
+        "minutes_max": 20,
+        "waiting_on": null,
+        "done_when": "The agent can successfully create a GitHub issue programmatically",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Test end-to-end bug reporting flow",
+        "stage": "approval",
+        "actions": [
+          "Simulate a user bug report and verify that an issue is successfully opened in the target repository"
+        ],
+        "detail": "Ensures that the entire pipeline from user sign-in to token handling and issue creation works correctly.",
+        "url": null,
+        "kind": "test",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "10 min",
+        "minutes_min": 5,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "An issue appears in the test repository matching the user's report",
+        "evidence": "inferred"
+      },
+      {
+        "title": "Make your agent do the job",
+        "actions": [
+          "Copy the prompt below into your coding agent.",
+          "Run it once with your own account."
+        ],
+        "detail": "This is the point of the prototype: your agent using the connection.",
+        "url": null,
+        "kind": "test",
+        "owner": "agent",
+        "time": "15-30 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "done_when": "Your agent completed the job in GitHub for your own account.",
+        "evidence": "inferred",
+        "agent_prompt": "First check the connect step really happened: the GitHub tool exists and is registered with my agent.  If anything is missing, stop and tell me what. Otherwise run my agent once on this job with my own account: Open an issue in the user's repository when they report a bug to the agent. Show me what changed in GitHub."
+      }
+    ],
+    "glossary": [
+      {
+        "term": "redirect URI",
+        "plain": "The URL to which GitHub redirects users after they authorize your application."
+      }
+    ],
+    "scopes": [
+      {
+        "scope": "repo",
+        "why": "Provides full control of private and public repositories, necessary to create issues.",
+        "sensitivity": "sensitive"
+      },
+      {
+        "scope": "public_repo",
+        "why": "Grants access to read and write public repositories if full repo scope is not desired.",
+        "sensitivity": "basic"
+      }
+    ],
+    "approval": {
+      "required": "depends",
+      "process": "New organizations have OAuth app access restrictions enabled by default, requiring an organization owner to approve the application before it can access organization resources.",
+      "wait": "Dependent on organization owner action; personal accounts require no review or wait.",
+      "evidence": "verified"
+    },
+    "blockers": [
+      {
+        "blocker": "Organization OAuth Access Restrictions",
+        "impact": "medium",
+        "mitigation": "Request organization owner approval via the organization settings page.",
+        "step": 4,
+        "evidence": "verified"
+      }
+    ],
+    "alternatives": [
+      "Use Composio managed authentication toolkit for GitHub"
+    ],
+    "agent_can_do": [
+      "Implement the OAuth authorization code exchange logic",
+      "Make POST requests to the GitHub REST API to create issues"
+    ],
+    "you_must_do": [
+      "Register the OAuth application in developer settings",
+      "Configure client secrets in environment variables",
+      "Obtain organization owner approval if accessing organization repositories"
+    ],
+    "next_action": "Register your GitHub OAuth application under your developer settings.",
+    "open_questions": [
+      "Whether target repositories belong to restricted organizations requiring manual owner consent."
+    ],
+    "sources": [
+      {
+        "title": "GitHub OAuth apps",
+        "url": "https://docs.github.com/apps/oauth-apps",
+        "used_for": "Understanding OAuth app capabilities and management"
+      },
+      {
+        "title": "Creating an OAuth app",
+        "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app",
+        "used_for": "Steps to register an OAuth app"
+      },
+      {
+        "title": "Authorizing OAuth apps",
+        "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps",
+        "used_for": "Web application flow and token exchange endpoints"
+      },
+      {
+        "title": "About OAuth app access restrictions",
+        "url": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions",
+        "used_for": "Organization approval requirements and default restrictions"
+      }
+    ],
+    "searched_urls": [],
+    "written_by": "parallel chat research + parallel json",
+    "fit": {
+      "actions": [
+        {
+          "action": "open an issue",
+          "needs_trigger": false
+        }
+      ],
+      "dimensions": [
+        {
+          "key": "auth_type",
+          "applies": "yes",
+          "note": "Uses standard OAuth 2.0."
+        },
+        {
+          "key": "registration",
+          "applies": "yes",
+          "note": "Self-serve application registration."
+        },
+        {
+          "key": "review",
+          "applies": "yes",
+          "note": "None for personal account; self-serve registration has no review."
+        },
+        {
+          "key": "distribution_limits",
+          "applies": "no",
+          "note": "No strict limits on user numbers for standard OAuth apps."
+        },
+        {
+          "key": "per_customer_instance",
+          "applies": "no",
+          "note": "Single global app registration connects multiple users."
+        },
+        {
+          "key": "admin_consent",
+          "applies": "depends",
+          "note": "New organizations have OAuth app access restrictions enabled by default, requiring owner approval."
+        },
+        {
+          "key": "tokens",
+          "applies": "yes",
+          "note": "Issues standard OAuth access tokens."
+        },
+        {
+          "key": "scopes_vs_actions",
+          "applies": "yes",
+          "note": "Requires repo or public_repo scope to create issues."
+        },
+        {
+          "key": "sandbox_vs_production",
+          "applies": "no",
+          "note": "Direct connection against live repositories; use a test repo."
+        },
+        {
+          "key": "triggers",
+          "applies": "no",
+          "note": "Agent initiates the action on bug report without requiring an inbound app trigger."
+        },
+        {
+          "key": "composio_layer",
+          "applies": "yes",
+          "note": "Composio hosts auth and provides ready actions."
+        }
+      ],
+      "composio": {
+        "toolkit_available": "yes",
+        "toolkit_slug": "github",
+        "covers_use_case": "yes",
+        "matching_actions": [
+          "GITHUB_CREATE_AN_ISSUE"
+        ],
+        "managed_auth": "yes",
+        "note": "Composio has a GitHub toolkit with 877 actions; Composio can handle the sign-in for you.",
+        "evidence": "verified",
+        "tools_count": 877,
+        "catalog_checked": true,
+        "api_checked": true
+      },
+      "answers": {
+        "users": "my_users",
+        "connect_via": "direct"
+      },
+      "decisions": [
+        {
+          "id": "users",
+          "title": "Who will connect their account?",
+          "why_it_matters": "Other people signing in can mean an approval wait.",
+          "show_if": null,
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "my_users",
+              "label": "My users",
+              "what_it_means": "Other people connect their own accounts to your agent.",
+              "pros": [
+                "Ready to launch"
+              ],
+              "cons": [
+                "May need the app's approval"
+              ],
+              "time": "Hours",
+              "wait": "Varies by app",
+              "cost": "Usually free",
+              "recommended": true,
+              "recommended_reason": "You're building for other people, so the guide covers what it takes to launch."
+            },
+            {
+              "value": "just_me",
+              "label": "Just me",
+              "what_it_means": "Only your own account, to try the idea first.",
+              "pros": [
+                "Fastest start",
+                "Usually no approval"
+              ],
+              "cons": [
+                "Others can't connect yet"
+              ],
+              "time": "Under an hour",
+              "wait": "Usually none",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "id": "connect_via",
+          "title": "How will your agent connect to this app?",
+          "why_it_matters": "Decides whether you manage OAuth credentials or use Composio.",
+          "show_if": null,
+          "options": [
+            {
+              "value": "composio",
+              "label": "Through Composio",
+              "what_it_means": "Composio handles sign-in, tokens, and provides ready-to-use actions for your agent.",
+              "pros": [
+                "Working in minutes",
+                "No app registration needed",
+                "Managed token refresh"
+              ],
+              "cons": [
+                "Rely on third-party layer"
+              ],
+              "time": "5 minutes",
+              "cost": "Free tier",
+              "recommended": true,
+              "recommended_reason": "Simplifies authentication completely with pre-built actions and zero configuration."
+            },
+            {
+              "value": "direct",
+              "label": "Direct OAuth App",
+              "what_it_means": "You register your own GitHub OAuth app and handle tokens manually.",
+              "pros": [
+                "Full control over app",
+                "Direct API access"
+              ],
+              "cons": [
+                "Manual token management",
+                "More code to write"
+              ],
+              "time": "30 minutes",
+              "cost": "Free",
+              "recommended": false,
+              "recommended_reason": "Requires building custom OAuth exchange and storage logic."
+            }
+          ],
+          "evidence": "verified"
+        },
+        {
+          "id": "branding",
+          "title": "Whose name should users see at sign-in?",
+          "why_it_matters": "Your own name means your own approval.",
+          "show_if": {
+            "connect_via": "composio",
+            "users": "my_users"
+          },
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "composio_name",
+              "label": "Composio's name",
+              "what_it_means": "Users sign in through Composio's GitHub app, already approved.",
+              "pros": [
+                "No app to register",
+                "No review for you"
+              ],
+              "cons": [
+                "Composio's name on screen"
+              ],
+              "time": "Minutes",
+              "wait": "None",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "It skips registering and reviewing your own app. You can switch to your own later."
+            },
+            {
+              "value": "own_app",
+              "label": "Your own app",
+              "what_it_means": "Register your own GitHub app and plug it into Composio.",
+              "pros": [
+                "Your name on screen",
+                "Your own limits"
+              ],
+              "cons": [
+                "You go through review"
+              ],
+              "time": "Hours",
+              "wait": "Depends on the app",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        }
+      ]
+    },
+    "link_check": {
+      "at": "2026-10-30T12:01:55.352Z",
+      "total": 8,
+      "ok": 8,
+      "unverified": 0,
+      "fixed": 0,
+      "removed": 0
+    }
+  },
+  "library": {
+    "order": 0,
+    "challenge": "Self-serve OAuth app with no review.",
+    "tested": "Sources checked",
+    "built_from": "github-mvux9foa"
+  }
+}

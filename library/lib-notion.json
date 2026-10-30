@@ -1,0 +1,539 @@
+{
+  "id": "lib-notion",
+  "created_at": "2026-10-30T12:20:23.520Z",
+  "model": "parallel chat research + parallel json",
+  "input": {
+    "app": "Notion",
+    "job": "Read and update pages in the user's Notion workspace",
+    "answers": {
+      "users": "my_users",
+      "connect_via": "direct"
+    },
+    "route": "Build your own"
+  },
+  "guide": {
+    "app": "Notion",
+    "website": "https://www.notion.com",
+    "job": "Read and update pages in the user's Notion workspace",
+    "job_assumed": true,
+    "summary": "To enable users to connect their Notion accounts, register a public connection in your Notion developer settings to get a client ID and secret. Implement an OAuth 2.0 flow using HTTP Basic authentication and handle explicit user page-sharing selections so your agent can read and update pages.",
+    "verdict": {
+      "difficulty": "moderate",
+      "difficulty_reason": "Approval only applies in some cases: Marketplace listing review takes 5-10 business days if you choose to list publicly; self-serve testing requires no review for your own account.",
+      "hands_on_time": "30-60 min",
+      "approval_wait": "5-10 business days for public marketplace listing review",
+      "oauth_supported": "yes",
+      "difficulty_adjusted": "Rated hard by the research agent; lowered because no review or wait is required for this audience."
+    },
+    "composio": {
+      "managed_oauth": "yes",
+      "toolkit_available": "yes",
+      "note": "Composio has a Notion toolkit with 57 actions and managed sign-in, though you chose to build your own OAuth flow.",
+      "evidence": "verified",
+      "api_checked": true,
+      "tools_count": 57
+    },
+    "route": {
+      "choice": "own_oauth_app",
+      "name": "Build your own public connection",
+      "reason": "You register a public connection and build your own sign-in flow for your users.",
+      "hands_on_time": "30-60 min",
+      "wait": "5-10 business days for public review",
+      "cost": "Free"
+    },
+    "costs": [
+      {
+        "item": "Notion developer account",
+        "amount": "free",
+        "when": "signup",
+        "required": "yes",
+        "evidence": "verified"
+      }
+    ],
+    "paths": [
+      {
+        "name": "Use Composio managed OAuth",
+        "when_to_choose": "If you want to skip custom OAuth implementation and use pre-built integrations.",
+        "tradeoffs": "Faster setup, but relies on a third-party managed toolkit.",
+        "recommended": false
+      },
+      {
+        "name": "Personal access token",
+        "when_to_choose": "For user-owned scripts, CLI workflows, or single-user internal testing.",
+        "tradeoffs": "Does not support multi-user launch scenarios.",
+        "recommended": false
+      }
+    ],
+    "prerequisites": [
+      {
+        "item": "A Notion account",
+        "how_to_get": "Sign up on the Notion website.",
+        "needs": [
+          {
+            "item": "Workspace Owner privileges",
+            "ok_if": "Workspace member, but owner privileges are needed for public connection creation.",
+            "later": "Required for configuring integrations."
+          }
+        ],
+        "actions": [
+          "Go to the Notion website and click **Sign Up**."
+        ],
+        "url": "https://www.notion.com/signup",
+        "time": "5 min",
+        "done_when": "You can access your Notion workspace dashboard.",
+        "blocks_route": true,
+        "evidence": "verified"
+      }
+    ],
+    "friction_checks": [
+      {
+        "stage": "register",
+        "check": "Can you choose installation scope?",
+        "answer": "Yes, but installation scope (Any workspace or Selected workspaces only) cannot be changed after creation.",
+        "handled_in": "Register your public connection",
+        "evidence": "verified"
+      },
+      {
+        "stage": "connect",
+        "check": "How do users grant access to pages?",
+        "answer": "The user picks which pages to share during sign-in; skipping this makes every write fail.",
+        "handled_in": "Handle user page sharing",
+        "evidence": "verified"
+      }
+    ],
+    "steps": [
+      {
+        "title": "Register your public connection",
+        "stage": "register",
+        "actions": [
+          "Open your Notion developer settings and click **New integration**.",
+          "Select **Public** integration type and set your installation scope carefully."
+        ],
+        "detail": "Create a public connection to obtain your OAuth client ID and secret. Note that installation scope cannot be changed after creation.",
+        "url": "https://developers.notion.com",
+        "kind": "register",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "10 min",
+        "minutes_min": 5,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "You have your client ID and client secret on the Configuration tab.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Configure redirect URIs and credentials",
+        "stage": "configure",
+        "actions": [
+          "Add your callback redirect URI in the integration settings.",
+          "Securely store your client ID and client secret in environment variables."
+        ],
+        "detail": "Ensure your callback URL matches your application environment (localhost for testing or production domain for launch).",
+        "url": null,
+        "kind": "configure",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "10 min",
+        "minutes_min": 5,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "Credentials are saved securely without exposing secrets in code.",
+        "evidence": "verified"
+      },
+      {
+        "title": "Implement OAuth authorization endpoint",
+        "stage": "code",
+        "actions": [
+          "Build the authorization URL using client ID, redirect URI, response_type=code, and owner=user.",
+          "Redirect your users to Notion to initiate the sign-in flow."
+        ],
+        "detail": "Before submission for review, your agent builds the authorization URL directly from your client parameters.",
+        "url": null,
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write a backend route that constructs the Notion OAuth authorization URL with client_id, redirect_uri, response_type=code, and owner=user, and redirects the user.",
+        "time": "20 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "waiting_on": null,
+        "done_when": "Users can successfully trigger the Notion login screen from your app.",
+        "evidence": "verified"
+      },
+      {
+        "title": "Handle token exchange with Basic auth",
+        "stage": "code",
+        "actions": [
+          "Exchange the authorization code for an access token via POST request.",
+          "Use HTTP Basic authentication with the base64-encoded client_id:client_secret."
+        ],
+        "detail": "Notion requires HTTP Basic authentication during the token exchange step to securely retrieve the access token.",
+        "url": "https://developers.notion.com/guides/get-started/authorization",
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write a token exchange handler that sends a POST request to Notion's token endpoint using HTTP Basic authentication with base64 encoded client ID and client secret, passing the authorization code.",
+        "time": "20 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "waiting_on": null,
+        "done_when": "Your backend successfully receives and stores the user's access token.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Handle user page sharing",
+        "stage": "connect",
+        "actions": [
+          "Instruct users to select specific pages during the Notion authorization prompt.",
+          "Verify that your API calls target pages explicitly shared by the user."
+        ],
+        "detail": "The user picks which pages to share during sign-in. Skipping this step or failing to share pages will cause every write and read operation to fail.",
+        "url": null,
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Add user-facing messaging in the OAuth connection flow reminding users to check and select the specific Notion pages they want the agent to access.",
+        "time": "15 min",
+        "minutes_min": 10,
+        "minutes_max": 20,
+        "waiting_on": null,
+        "done_when": "Connected users have successfully shared workspace pages with your application.",
+        "evidence": "verified"
+      },
+      {
+        "title": "Test page read and update",
+        "stage": "test",
+        "actions": [
+          "Write test routines to fetch page content using GET requests.",
+          "Execute PATCH requests to update page properties and verify success."
+        ],
+        "detail": "Confirm that your agent can successfully perform both read and update operations on the user's shared Notion pages.",
+        "url": "https://developers.notion.com/reference/intro.md",
+        "kind": "test",
+        "owner": "agent",
+        "agent_prompt": "Write integration tests that use the acquired OAuth token to fetch a Notion page via GET and update its properties via PATCH against api.notion.com.",
+        "time": "20 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "waiting_on": null,
+        "done_when": "Test script successfully reads and updates a Notion page without errors.",
+        "evidence": "verified",
+        "link_status": "ok"
+      }
+    ],
+    "glossary": [
+      {
+        "term": "public connection",
+        "plain": "A Notion integration configured via OAuth 2.0 that allows external users to connect their workspaces to your application."
+      },
+      {
+        "term": "HTTP Basic authentication",
+        "plain": "An authentication scheme where credentials consisting of a user ID and password (or client ID and secret) are encoded in base64 within the request header."
+      }
+    ],
+    "scopes": [
+      {
+        "scope": "Page read and write access",
+        "why": "Required to read and update pages in the user's Notion workspace.",
+        "sensitivity": "sensitive"
+      }
+    ],
+    "approval": {
+      "required": "depends",
+      "process": "Marketplace listing review takes 5-10 business days if you choose to list publicly; self-serve testing requires no review for your own account.",
+      "wait": "5-10 business days for public listing",
+      "evidence": "verified"
+    },
+    "blockers": [
+      {
+        "blocker": "Installation scope cannot be changed after creation",
+        "impact": "high",
+        "mitigation": "Carefully select either Any workspace or Selected workspaces only when initially creating the public connection.",
+        "step": 0,
+        "evidence": "verified"
+      },
+      {
+        "blocker": "Failing to select pages during authorization",
+        "impact": "high",
+        "mitigation": "Ensure users explicitly select and share pages during the OAuth sign-in flow so write operations do not fail.",
+        "step": 4,
+        "evidence": "verified"
+      }
+    ],
+    "alternatives": [
+      "Use Composio managed OAuth for automated token handling and pre-built Notion tools."
+    ],
+    "agent_can_do": [
+      "Build the authorization URL redirect flow.",
+      "Handle OAuth token exchange using HTTP Basic auth.",
+      "Execute API requests to read and update Notion pages."
+    ],
+    "you_must_do": [
+      "Register the public connection in Notion developer settings.",
+      "Configure client credentials and secure environment variables."
+    ],
+    "next_action": "Open your Notion developer settings to register a new public connection and record your client ID and secret.",
+    "open_questions": [
+      "Whether you intend to submit the public connection to the official Notion marketplace for public discovery."
+    ],
+    "sources": [
+      {
+        "title": "Notion connectors - Notion | Workato docs",
+        "url": "https://docs.workato.com/en/connectors/notion",
+        "used_for": "Notion REST API and authentication types overview."
+      },
+      {
+        "title": "Notion API Introduction",
+        "url": "https://developers.notion.com/reference/intro.md",
+        "used_for": "Base URL and RESTful request methods."
+      },
+      {
+        "title": "Notion API Connection Types",
+        "url": "https://developers.notion.so/",
+        "used_for": "Internal and public connection definitions."
+      },
+      {
+        "title": "Authentication",
+        "url": "https://developers.notion.com/reference/authentication",
+        "used_for": "Bearer tokens and HTTP version headers."
+      }
+    ],
+    "searched_urls": [],
+    "written_by": "parallel chat research + parallel json",
+    "fit": {
+      "actions": [
+        {
+          "action": "read pages",
+          "needs_trigger": false
+        },
+        {
+          "action": "update pages",
+          "needs_trigger": false
+        }
+      ],
+      "dimensions": [
+        {
+          "key": "auth_type",
+          "applies": "yes",
+          "note": "Uses OAuth 2.0 public connections requiring client credentials."
+        },
+        {
+          "key": "registration",
+          "applies": "yes",
+          "note": "Self-serve setup available for developers creating public connections."
+        },
+        {
+          "key": "review",
+          "applies": "yes",
+          "note": "None for your own account; Marketplace listing review takes 5-10 business days before public distribution."
+        },
+        {
+          "key": "distribution_limits",
+          "applies": "no",
+          "note": "No hard user caps before application review, though marketplace listing is required for public discovery."
+        },
+        {
+          "key": "per_customer_instance",
+          "applies": "yes",
+          "note": "Each user authenticates independently and shares specific pages with the connection."
+        },
+        {
+          "key": "admin_consent",
+          "applies": "no",
+          "note": "Individual users can connect their own accounts and pages."
+        },
+        {
+          "key": "tokens",
+          "applies": "yes",
+          "note": "Access tokens are managed per user and linked to explicit page selections."
+        },
+        {
+          "key": "scopes_vs_actions",
+          "applies": "no",
+          "note": "Notion does not use fine-grained OAuth scopes; permission is handled via page sharing."
+        },
+        {
+          "key": "sandbox_vs_production",
+          "applies": "no",
+          "note": "Uses standard workspace environments for testing and production."
+        },
+        {
+          "key": "triggers",
+          "applies": "yes",
+          "note": "Composio toolkit supports 8 triggers for event-based workflows."
+        },
+        {
+          "key": "composio_layer",
+          "applies": "yes",
+          "note": "Managed authentication and ready-made actions remove the need for custom OAuth code."
+        }
+      ],
+      "composio": {
+        "toolkit_available": "yes",
+        "toolkit_slug": "notion",
+        "covers_use_case": "yes",
+        "matching_actions": [
+          "read pages",
+          "update pages"
+        ],
+        "managed_auth": "yes",
+        "note": "Composio has a Notion toolkit with 57 actions; Composio can handle the sign-in for you.",
+        "evidence": "verified",
+        "tools_count": 57,
+        "catalog_checked": true,
+        "api_checked": true
+      },
+      "answers": {
+        "users": "my_users",
+        "connect_via": "direct"
+      },
+      "decisions": [
+        {
+          "id": "users",
+          "title": "Who will connect their account?",
+          "why_it_matters": "Other people signing in can mean an approval wait.",
+          "show_if": null,
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "my_users",
+              "label": "My users",
+              "what_it_means": "Other people connect their own accounts to your agent.",
+              "pros": [
+                "Ready to launch"
+              ],
+              "cons": [
+                "May need the app's approval"
+              ],
+              "time": "Hours",
+              "wait": "Varies by app",
+              "cost": "Usually free",
+              "recommended": true,
+              "recommended_reason": "You're building for other people, so the guide covers what it takes to launch."
+            },
+            {
+              "value": "just_me",
+              "label": "Just me",
+              "what_it_means": "Only your own account, to try the idea first.",
+              "pros": [
+                "Fastest start",
+                "Usually no approval"
+              ],
+              "cons": [
+                "Others can't connect yet"
+              ],
+              "time": "Under an hour",
+              "wait": "Usually none",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "id": "connect_via",
+          "title": "How will your agent connect to this app?",
+          "why_it_matters": "Determines whether you write custom OAuth code or use managed tools.",
+          "show_if": null,
+          "options": [
+            {
+              "value": "composio",
+              "label": "Through Composio",
+              "what_it_means": "Composio handles sign-in, token storage, and provides ready-made actions.",
+              "pros": [
+                "Working in minutes",
+                "No OAuth code needed",
+                "Automatic token refreshes"
+              ],
+              "cons": [
+                "Depends on third-party service"
+              ],
+              "time": "Minutes",
+              "wait": "None",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "Avoids complex OAuth setup and lets your agent read and update Notion pages immediately."
+            },
+            {
+              "value": "direct",
+              "label": "Build your own",
+              "what_it_means": "You register a public connection and build your own sign-in flow.",
+              "pros": [
+                "Total control over code",
+                "No external dependencies"
+              ],
+              "cons": [
+                "Hours of setup",
+                "Manual token management",
+                "Marketplace review wait"
+              ],
+              "time": "Days",
+              "wait": "5-10 business days",
+              "cost": "Free",
+              "recommended": false,
+              "recommended_reason": ""
+            }
+          ],
+          "evidence": "verified"
+        },
+        {
+          "id": "branding",
+          "title": "Whose name should users see at sign-in?",
+          "why_it_matters": "Your own name means your own approval.",
+          "show_if": {
+            "connect_via": "composio",
+            "users": "my_users"
+          },
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "composio_name",
+              "label": "Composio's name",
+              "what_it_means": "Users sign in through Composio's Notion app, already approved.",
+              "pros": [
+                "No app to register",
+                "No review for you"
+              ],
+              "cons": [
+                "Composio's name on screen"
+              ],
+              "time": "Minutes",
+              "wait": "None",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "It skips registering and reviewing your own app. You can switch to your own later."
+            },
+            {
+              "value": "own_app",
+              "label": "Your own app",
+              "what_it_means": "Register your own Notion app and plug it into Composio.",
+              "pros": [
+                "Your name on screen",
+                "Your own limits"
+              ],
+              "cons": [
+                "You go through review"
+              ],
+              "time": "Hours",
+              "wait": "Depends on the app",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        }
+      ]
+    },
+    "link_check": {
+      "at": "2026-10-30T12:20:23.519Z",
+      "total": 8,
+      "ok": 8,
+      "unverified": 0,
+      "fixed": 0,
+      "removed": 0
+    }
+  },
+  "library": {
+    "order": 1,
+    "challenge": "Public connection, page picker at sign-in, keys sent with HTTP Basic.",
+    "tested": "Sources checked",
+    "built_from": "notion-mvuxx6qo"
+  }
+}

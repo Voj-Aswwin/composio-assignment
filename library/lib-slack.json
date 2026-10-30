@@ -1,0 +1,641 @@
+{
+  "id": "lib-slack",
+  "created_at": "2026-10-30T12:05:00.348Z",
+  "model": "parallel chat research + parallel json",
+  "input": {
+    "app": "Slack",
+    "job": "Post a weekly summary to a channel in the user's Slack workspace",
+    "answers": {
+      "users": "my_users",
+      "connect_via": "direct",
+      "permissions": "chat:write"
+    },
+    "route": "Use your own app"
+  },
+  "guide": {
+    "app": "Slack",
+    "website": "https://slack.com/",
+    "job": "Post a weekly summary to a channel in the user's Slack workspace",
+    "job_assumed": false,
+    "summary": "Build a custom Slack app to manage OAuth authentication, configure necessary scopes for posting messages, and implement the authorization flow so users can connect their workspaces and allow your agent to post weekly summaries.",
+    "verdict": {
+      "difficulty": "hard",
+      "difficulty_reason": "Requires registering a custom app, configuring OAuth scopes, implementing a callback route, managing token storage, and navigating workspace distribution requirements.",
+      "hands_on_time": "45-60 min",
+      "approval_wait": "none for basic self-serve; workspace admin approval may be required depending on enterprise settings",
+      "oauth_supported": "yes"
+    },
+    "composio": {
+      "managed_oauth": "yes",
+      "toolkit_available": "yes",
+      "note": "Composio has a Slack toolkit with 162 actions and managed sign-in, though you selected to build with your own app.",
+      "evidence": "verified",
+      "api_checked": true,
+      "tools_count": 162
+    },
+    "route": {
+      "choice": "own_oauth_app",
+      "name": "Use your own app",
+      "reason": "You register a custom Slack app, handle sign-in, and store tokens yourself.",
+      "hands_on_time": "45-60 min",
+      "wait": "none",
+      "cost": "Free"
+    },
+    "costs": [
+      {
+        "item": "Slack Developer Account / App Registration",
+        "amount": "free",
+        "when": "at registration",
+        "required": "yes",
+        "evidence": "verified"
+      }
+    ],
+    "paths": [
+      {
+        "name": "Use Composio managed OAuth",
+        "when_to_choose": "If you want to skip manual OAuth app configuration and token handling.",
+        "tradeoffs": "Faster setup, but relies on Composio's managed authentication layer rather than your custom app.",
+        "recommended": false
+      }
+    ],
+    "prerequisites": [
+      {
+        "item": "A Slack Developer Account",
+        "how_to_get": "Sign up on the Slack API page.",
+        "needs": [
+          {
+            "item": "An email address",
+            "ok_if": "Any valid email address works",
+            "later": null
+          }
+        ],
+        "actions": [
+          "Navigate to the Slack API portal and sign up."
+        ],
+        "url": "https://api.slack.com/",
+        "time": "5 min",
+        "done_when": "You are logged into the Slack API dashboard.",
+        "blocks_route": true,
+        "evidence": "verified"
+      },
+      {
+        "item": "A target Slack Workspace for testing",
+        "how_to_get": "Create or join a Slack workspace where you have permission to install apps.",
+        "needs": [
+          {
+            "item": "Workspace admin or install permissions",
+            "ok_if": "A free tier development workspace where you are the owner",
+            "later": null
+          }
+        ],
+        "actions": [
+          "Create a new workspace at slack.com if needed."
+        ],
+        "url": "https://slack.com/",
+        "time": "5 min",
+        "done_when": "You can access a workspace with administrative control.",
+        "blocks_route": true,
+        "evidence": "verified"
+      }
+    ],
+    "friction_checks": [
+      {
+        "stage": "register",
+        "check": "Do you need app registration?",
+        "answer": "Yes, you must create a custom app in the Slack API portal.",
+        "handled_in": "Step 1",
+        "evidence": "verified"
+      },
+      {
+        "stage": "redirect",
+        "check": "Are redirect URIs restricted?",
+        "answer": "Yes, redirect URLs must use HTTPS once distributed, though localhost is fine for prototyping.",
+        "handled_in": "Step 2",
+        "evidence": "verified"
+      },
+      {
+        "stage": "scopes",
+        "check": "What scopes are required?",
+        "answer": "chat:write and channels:read are required to post to invited channels.",
+        "handled_in": "Step 3",
+        "evidence": "verified"
+      },
+      {
+        "stage": "approval",
+        "check": "Is a public app review required?",
+        "answer": "Public distribution needs a checklist and activation button rather than an upfront review, though optional Marketplace listing requires review.",
+        "handled_in": "Step 5",
+        "evidence": "verified"
+      }
+    ],
+    "steps": [
+      {
+        "title": "Create a new Slack app",
+        "stage": "register",
+        "actions": [
+          "Go to the Slack API dashboard and click **Create New App**",
+          "Choose **From scratch**",
+          "Enter your app name and select your development workspace"
+        ],
+        "detail": "Creating a custom app establishes the credentials and unique identifier required for OAuth communication with Slack.",
+        "url": "https://docs.slack.dev/app-management/quickstart-app-settings",
+        "kind": "register",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "Your app is created and you are viewing its basic settings page.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Configure OAuth redirect URLs",
+        "stage": "configure",
+        "actions": [
+          "Navigate to **OAuth & Permissions** in your app settings",
+          "Click **Add New Redirect URL**",
+          "Enter your callback URL and click **Add** then **Save URLs**"
+        ],
+        "detail": "Setting up a valid redirect URL ensures Slack can securely return authorization codes back to your application during the sign-in flow.",
+        "url": "https://docs.slack.dev/app-management/quickstart-app-settings",
+        "kind": "configure",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "Your redirect URL is saved successfully in the OAuth settings.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Add required bot token scopes",
+        "stage": "scopes",
+        "actions": [
+          "In **OAuth & Permissions**, scroll to **Scopes**",
+          "Under **Bot Token Scopes**, click **Add an OAuth Scope**",
+          "Add chat:write and channels:read"
+        ],
+        "detail": "Granting these specific scopes ensures your agent has permission to read channel information and post summary messages to invited channels.",
+        "url": "https://docs.slack.dev/app-management/quickstart-app-settings",
+        "kind": "scopes",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "The required bot token scopes are listed under OAuth & Permissions.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Extract client credentials",
+        "stage": "keys",
+        "actions": [
+          "Go to **Basic Information** in your app settings",
+          "Copy your **Client ID** and **Client Secret**",
+          "Store them securely in your environment variables"
+        ],
+        "detail": "Your agent needs the Client ID and Client Secret to initiate the OAuth flow and exchange authorization codes for access tokens.",
+        "url": "https://docs.slack.dev/app-management/quickstart-app-settings",
+        "kind": "credentials",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "Client ID and Client Secret are saved in your local environment file.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Implement OAuth sign-in flow in code",
+        "stage": "connect",
+        "actions": [
+          "Build an auth route redirecting users to Slack's authorization URL",
+          "Build a callback route handling the code exchange for tokens",
+          "Store the returned access token securely against the user record"
+        ],
+        "detail": "Writing the backend OAuth handler enables external users to log in with their Slack credentials and grant access to your application.",
+        "url": null,
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write an Express.js route /auth/slack that redirects the user to https://slack.com/oauth/v2/authorize with client_id and scopes chat:write,channels:read. Also write /auth/slack/callback to exchange the code for a token using POST https://slack.com/api/oauth.v2.access.",
+        "time": "20 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "waiting_on": null,
+        "done_when": "Your server successfully exchanges an authorization code for a valid Slack access token.",
+        "evidence": "inferred"
+      },
+      {
+        "title": "Implement weekly summary posting action",
+        "stage": "connect",
+        "actions": [
+          "Write code to call chat.postMessage using the stored user token",
+          "Format the weekly summary payload with text and target channel ID",
+          "Schedule or trigger the function to execute weekly"
+        ],
+        "detail": "Using the acquired token, your agent can now call the Slack Web API to publish weekly updates directly into the designated channel.",
+        "url": null,
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write a function postWeeklySummary(token, channelId, message) that calls Slack's POST https://slack.com/api/chat.postMessage using Bearer authentication with the provided token.",
+        "time": "15 min",
+        "minutes_min": 10,
+        "minutes_max": 20,
+        "waiting_on": null,
+        "done_when": "The agent function successfully compiles and is ready for integration testing.",
+        "evidence": "inferred"
+      },
+      {
+        "title": "Test OAuth and posting end-to-end",
+        "stage": "connect",
+        "actions": [
+          "Start your local server and trigger the sign-in flow",
+          "Authorize the app in your test Slack workspace",
+          "Invoke the agent function to post a test summary message"
+        ],
+        "detail": "End-to-end testing verifies that the complete lifecycle from user sign-in to posting messages functions seamlessly without errors.",
+        "url": null,
+        "kind": "test",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "10 min",
+        "minutes_min": 10,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "A test message appears in your target Slack channel via your agent code.",
+        "evidence": "inferred"
+      },
+      {
+        "title": "Make your agent do the job",
+        "actions": [
+          "Copy the prompt below into your coding agent.",
+          "Run it once with your own account."
+        ],
+        "detail": "This is the point of the prototype: your agent using the connection.",
+        "url": null,
+        "kind": "test",
+        "owner": "agent",
+        "time": "15-30 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "done_when": "Your agent completed the job in Slack for your own account.",
+        "evidence": "inferred",
+        "agent_prompt": "First check the connect step really happened: the Slack tool exists and is registered with my agent.  If anything is missing, stop and tell me what. Otherwise run my agent once on this job with my own account: Post a weekly summary to a channel in the user's Slack workspace. Show me what changed in Slack."
+      }
+    ],
+    "glossary": [
+      {
+        "term": "redirect URI",
+        "plain": "The callback URL where Slack sends the user after they approve your app authorization request."
+      },
+      {
+        "term": "bot token scope",
+        "plain": "Permissions granted to your app that define what actions it can perform on behalf of the bot."
+      }
+    ],
+    "scopes": [
+      {
+        "scope": "chat:write",
+        "why": "Allows the agent to post messages to channels.",
+        "sensitivity": "basic"
+      },
+      {
+        "scope": "channels:read",
+        "why": "Allows the agent to view public channel details.",
+        "sensitivity": "basic"
+      }
+    ],
+    "approval": {
+      "required": "depends",
+      "process": "Public distribution needs a checklist and activation button rather than an upfront review, but workspace admins may require approval or block installs.",
+      "wait": "none for self-serve; variable if workspace admin approval is enforced",
+      "evidence": "verified"
+    },
+    "blockers": [
+      {
+        "blocker": "Workspace admin blocks third-party app installations",
+        "impact": "high",
+        "mitigation": "Request workspace admin approval or install the app within a workspace where you hold administrative rights.",
+        "step": 6,
+        "evidence": "verified"
+      }
+    ],
+    "alternatives": [
+      "Use Composio managed authentication toolkit for Slack"
+    ],
+    "agent_can_do": [
+      "Write the OAuth route handling code",
+      "Implement the chat.postMessage API wrapper",
+      "Format the summary payload"
+    ],
+    "you_must_do": [
+      "Create the app in the Slack API portal",
+      "Configure redirect URLs and scopes",
+      "Copy client credentials into environment variables"
+    ],
+    "next_action": "Go to the Slack API portal to create your new custom app and configure its basic settings.",
+    "open_questions": [
+      "Whether enterprise customers have strict custom app approval workflows that require additional documentation."
+    ],
+    "sources": [
+      {
+        "title": "Creating an app from app settings - Slack Developer Docs",
+        "url": "https://docs.slack.dev/app-management/quickstart-app-settings",
+        "used_for": "App creation steps, redirect URL configuration, and scope settings."
+      }
+    ],
+    "searched_urls": [
+      {
+        "url": "https://docs.slack.dev/app-management/quickstart-app-settings",
+        "title": "Creating an app from app settings - Slack Developer Docs"
+      }
+    ],
+    "written_by": "parallel chat research + parallel json",
+    "fit": {
+      "actions": [
+        {
+          "action": "post message to channel",
+          "needs_trigger": false
+        }
+      ],
+      "dimensions": [
+        {
+          "key": "auth_type",
+          "applies": "yes",
+          "note": "Uses OAuth 2.0 for connecting workspaces securely."
+        },
+        {
+          "key": "registration",
+          "applies": "yes",
+          "note": "Self-serve app registration available via the Slack API portal."
+        },
+        {
+          "key": "review",
+          "applies": "depends",
+          "note": "None for personal accounts or public distribution activation (checklist only); optional Slack Marketplace listing requires review and 10+ installed workspaces."
+        },
+        {
+          "key": "distribution_limits",
+          "applies": "yes",
+          "note": "Public distribution requires the Activate Public Distribution button, while workspace admins can block or require approval for installs."
+        },
+        {
+          "key": "per_customer_instance",
+          "applies": "yes",
+          "note": "Agents connect to individual user workspaces."
+        },
+        {
+          "key": "admin_consent",
+          "applies": "depends",
+          "note": "Workspace admins may block installs or require approval depending on company security policies."
+        },
+        {
+          "key": "tokens",
+          "applies": "yes",
+          "note": "OAuth tokens must be securely stored and refreshed."
+        },
+        {
+          "key": "scopes_vs_actions",
+          "applies": "yes",
+          "note": "Narrow scopes limit posting to invited channels, while broader scopes allow posting to public channels without an invite."
+        },
+        {
+          "key": "sandbox_vs_production",
+          "applies": "no",
+          "note": "Tests are typically run directly within a designated development workspace."
+        },
+        {
+          "key": "triggers",
+          "applies": "no",
+          "note": "The agent posts on a schedule and does not require an incoming app event to start."
+        },
+        {
+          "key": "composio_layer",
+          "applies": "yes",
+          "note": "Composio provides managed sign-in and ready-made actions for Slack."
+        }
+      ],
+      "composio": {
+        "toolkit_available": "yes",
+        "toolkit_slug": "slack",
+        "covers_use_case": "yes",
+        "matching_actions": [
+          "chat.postMessage"
+        ],
+        "managed_auth": "yes",
+        "note": "Composio has a Slack toolkit with 162 actions; Composio can handle the sign-in for you.",
+        "evidence": "verified",
+        "tools_count": 162,
+        "catalog_checked": true,
+        "api_checked": true
+      },
+      "answers": {
+        "users": "my_users",
+        "connect_via": "direct",
+        "permissions": "chat:write"
+      },
+      "decisions": [
+        {
+          "id": "users",
+          "title": "Who will connect their account?",
+          "why_it_matters": "Other people signing in can mean an approval wait.",
+          "show_if": null,
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "my_users",
+              "label": "My users",
+              "what_it_means": "Other people connect their own accounts to your agent.",
+              "pros": [
+                "Ready to launch"
+              ],
+              "cons": [
+                "May need the app's approval"
+              ],
+              "time": "Hours",
+              "wait": "Varies by app",
+              "cost": "Usually free",
+              "recommended": true,
+              "recommended_reason": "You're building for other people, so the guide covers what it takes to launch."
+            },
+            {
+              "value": "just_me",
+              "label": "Just me",
+              "what_it_means": "Only your own account, to try the idea first.",
+              "pros": [
+                "Fastest start",
+                "Usually no approval"
+              ],
+              "cons": [
+                "Others can't connect yet"
+              ],
+              "time": "Under an hour",
+              "wait": "Usually none",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "id": "connect_via",
+          "title": "How will your agent connect to this app?",
+          "why_it_matters": "Choose how your agent signs in and manages Slack connections for users.",
+          "show_if": null,
+          "options": [
+            {
+              "value": "composio",
+              "label": "Use Composio",
+              "what_it_means": "Composio handles sign-in, token refreshes, and provides ready-made Slack actions.",
+              "pros": [
+                "Working in minutes",
+                "No custom app setup",
+                "Managed sign-in"
+              ],
+              "cons": [
+                "Depends on platform tools",
+                "Limited branding customization"
+              ],
+              "time": "Minutes",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "It gives you immediate access to ready-made actions and managed sign-in without building custom OAuth handling."
+            },
+            {
+              "value": "direct",
+              "label": "Use your own app",
+              "what_it_means": "You register a custom Slack app, handle sign-in, and store tokens yourself.",
+              "pros": [
+                "Full brand control",
+                "Direct API access",
+                "Custom permissions"
+              ],
+              "cons": [
+                "Setup takes days",
+                "You manage token storage",
+                "Requires handling admin policies"
+              ],
+              "time": "Hours to days",
+              "cost": "Free",
+              "recommended": false,
+              "recommended_reason": ""
+            }
+          ],
+          "evidence": "verified"
+        },
+        {
+          "id": "branding",
+          "title": "Whose name should users see at sign-in?",
+          "why_it_matters": "Your own name means your own approval.",
+          "show_if": {
+            "connect_via": "composio",
+            "users": "my_users"
+          },
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "composio_name",
+              "label": "Composio's name",
+              "what_it_means": "Users sign in through Composio's Slack app, already approved.",
+              "pros": [
+                "No app to register",
+                "No review for you"
+              ],
+              "cons": [
+                "Composio's name on screen"
+              ],
+              "time": "Minutes",
+              "wait": "None",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "It skips registering and reviewing your own app. You can switch to your own later."
+            },
+            {
+              "value": "own_app",
+              "label": "Your own app",
+              "what_it_means": "Register your own Slack app and plug it into Composio.",
+              "pros": [
+                "Your name on screen",
+                "Your own limits"
+              ],
+              "cons": [
+                "You go through review"
+              ],
+              "time": "Hours",
+              "wait": "Depends on the app",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "id": "permissions",
+          "title": "What permissions does your agent need?",
+          "why_it_matters": "Control where the agent can post messages in user workspaces.",
+          "show_if": null,
+          "options": [
+            {
+              "value": "chat:write",
+              "label": "Post to invited channels",
+              "what_it_means": "The agent can only post messages to channels where the bot has been explicitly added.",
+              "pros": [
+                "Safer permissions",
+                "Stricter workspace control",
+                "Fewer security concerns"
+              ],
+              "cons": [
+                "Requires bot invitation",
+                "Extra manual setup step"
+              ],
+              "time": "Minutes",
+              "cost": "Free",
+              "recommended": true,
+              "recommended_reason": "Provides a safer permission boundary by restricting the agent to channels it was explicitly invited to."
+            },
+            {
+              "value": "chat:write + chat:write.public",
+              "label": "Post to any channel",
+              "what_it_means": "The agent can post to any public channel without needing an invitation.",
+              "pros": [
+                "No manual invites",
+                "Broader reach instantly",
+                "Simpler workflow"
+              ],
+              "cons": [
+                "Broader access level",
+                "Higher security trust",
+                "Potential for spamming"
+              ],
+              "time": "Minutes",
+              "cost": "Free",
+              "recommended": false,
+              "recommended_reason": ""
+            }
+          ],
+          "evidence": "verified"
+        }
+      ]
+    },
+    "link_check": {
+      "at": "2026-10-30T12:05:00.347Z",
+      "total": 6,
+      "ok": 6,
+      "unverified": 0,
+      "fixed": 0,
+      "removed": 0
+    }
+  },
+  "library": {
+    "order": 3,
+    "challenge": "Distributing to other workspaces; admins can restrict apps.",
+    "tested": "Sources checked",
+    "built_from": "slack-mvuxdef0"
+  }
+}

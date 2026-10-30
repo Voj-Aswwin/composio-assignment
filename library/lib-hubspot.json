@@ -1,0 +1,573 @@
+{
+  "id": "lib-hubspot",
+  "created_at": "2026-10-30T12:04:02.603Z",
+  "model": "parallel chat research + parallel json",
+  "input": {
+    "app": "HubSpot",
+    "job": "Add new leads from the user's inbox as HubSpot contacts",
+    "answers": {
+      "users": "my_users",
+      "connect_via": "direct"
+    },
+    "route": "Direct OAuth App"
+  },
+  "guide": {
+    "app": "HubSpot",
+    "website": "https://www.hubspot.com",
+    "job": "Add new leads from the user's inbox as HubSpot contacts",
+    "job_assumed": false,
+    "summary": "To allow your users to connect their HubSpot accounts to your AI agent for creating contacts, you can register your own HubSpot application, implement OAuth 2.0 authorization, store and refresh tokens, and call the HubSpot API.",
+    "verdict": {
+      "difficulty": "hard",
+      "difficulty_reason": "A required review, verification, assessment, or installation cap applies to public launches and third-party app installations.",
+      "hands_on_time": "30-60 min",
+      "approval_wait": "2-6 weeks for public launch",
+      "oauth_supported": "yes"
+    },
+    "composio": {
+      "managed_oauth": "yes",
+      "toolkit_available": "yes",
+      "note": "Composio has a HubSpot toolkit with 323 actions; Composio can handle the sign-in for you.",
+      "evidence": "verified",
+      "api_checked": true,
+      "tools_count": 323
+    },
+    "route": {
+      "choice": "own_oauth_app",
+      "name": "Direct OAuth App",
+      "reason": "You register your own HubSpot app, handle sign-in, and store tokens yourself.",
+      "hands_on_time": "30-45 min",
+      "wait": "2-6 weeks for public listing",
+      "cost": "free"
+    },
+    "costs": [
+      {
+        "item": "HubSpot Developer Account & CRM",
+        "amount": "free",
+        "when": "signup",
+        "required": "yes",
+        "evidence": "verified"
+      }
+    ],
+    "paths": [
+      {
+        "name": "Use Composio managed OAuth",
+        "when_to_choose": "Fastest setup without registering your own app in HubSpot.",
+        "tradeoffs": "Users see an unverified app warning until the default app clears review.",
+        "recommended": false
+      },
+      {
+        "name": "Direct OAuth App",
+        "when_to_choose": "When you want your own branding and control over scopes.",
+        "tradeoffs": "Requires managing client credentials, redirect URIs, token refreshing, and public app review for limits above 25 installs.",
+        "recommended": true
+      },
+      {
+        "name": "HubSpot Private App / Personal Access Token",
+        "when_to_choose": "For single-user local prototyping where OAuth is unnecessary.",
+        "tradeoffs": "Cannot scale to other users connecting their own accounts.",
+        "recommended": false
+      }
+    ],
+    "prerequisites": [
+      {
+        "item": "HubSpot Developer Account",
+        "how_to_get": "Sign up for a free developer account through HubSpot's website.",
+        "needs": [
+          {
+            "item": "Company website",
+            "ok_if": "A personal site or your app's temporary testing URL works for testing",
+            "later": "A real website and privacy policy become required for a public app"
+          }
+        ],
+        "actions": [
+          "Go to HubSpot developer portal and click **Sign up**",
+          "Complete the CRM onboarding questionnaire providing a website"
+        ],
+        "url": "https://www.hubspot.com",
+        "time": "10 min",
+        "done_when": "You can access the HubSpot developer dashboard",
+        "blocks_route": true,
+        "evidence": "verified"
+      }
+    ],
+    "friction_checks": [
+      {
+        "stage": "signup",
+        "check": "Requires company website?",
+        "answer": "Yes, HubSpot's developer sign-up goes through free CRM onboarding asking for a website.",
+        "handled_in": "HubSpot Developer Account prerequisite",
+        "evidence": "verified"
+      },
+      {
+        "stage": "approval",
+        "check": "App install limits?",
+        "answer": "Privately distributed apps are capped at 10 portals; Marketplace apps are capped at 25 installs until listed.",
+        "handled_in": "Submit App for Marketplace Review",
+        "evidence": "verified"
+      }
+    ],
+    "steps": [
+      {
+        "title": "Create a HubSpot app",
+        "stage": "register",
+        "actions": [
+          "Go to your developer account and click **Apps**",
+          "Click **Create app** and configure basic information"
+        ],
+        "detail": "Establish your app entity within HubSpot to generate client credentials and configure OAuth settings.",
+        "url": "https://app.hubspot.com",
+        "kind": "register",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "App is created and client ID/secret are generated",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Configure OAuth redirect URI",
+        "stage": "redirect",
+        "actions": [
+          "Navigate to the **Auth** tab in your app settings",
+          "Enter your callback URL and click **Save**"
+        ],
+        "detail": "Set up the redirect endpoint where HubSpot will send authorization codes after a user grants permission.",
+        "url": null,
+        "kind": "configure",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "Redirect URI is saved successfully",
+        "evidence": "verified"
+      },
+      {
+        "title": "Select contact scopes",
+        "stage": "scopes",
+        "actions": [
+          "Select required permissions including `crm.objects.contacts.write`",
+          "Save your scope selections"
+        ],
+        "detail": "Ensure your app requests the necessary permissions to read and write contacts on behalf of connecting users.",
+        "url": null,
+        "kind": "scopes",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "Scopes are configured for the app",
+        "evidence": "verified"
+      },
+      {
+        "title": "Implement OAuth code in agent",
+        "stage": "code",
+        "actions": [
+          "Write authorization redirect logic pointing to https://app.hubspot.com/oauth/authorize",
+          "Implement token exchange handling via POST to https://api.hubapi.com/oauth/v1/token"
+        ],
+        "detail": "Build the agent backend to handle the OAuth authorization handshake, securely store tokens, and refresh them automatically.",
+        "url": null,
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Implement an OAuth 2.0 flow for HubSpot, handling authorization code redirection, exchanging codes for access and refresh tokens at https://api.hubapi.com/oauth/v1/token, and securely storing them.",
+        "time": "20 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "waiting_on": null,
+        "done_when": "Token exchange code is written and integrated",
+        "evidence": "verified"
+      },
+      {
+        "title": "Submit app for marketplace review",
+        "stage": "approval",
+        "actions": [
+          "Complete app review requirements in the developer portal",
+          "Submit app for marketplace listing review"
+        ],
+        "detail": "Submit your app to lift the 25-install marketplace limit and the 10-portal private distribution limit for public launch.",
+        "url": null,
+        "kind": "submit",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "10 min",
+        "minutes_min": 5,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "Application review is submitted",
+        "evidence": "verified"
+      },
+      {
+        "title": "Wait for marketplace approval",
+        "stage": "approval",
+        "actions": [
+          "Monitor review status in the developer portal"
+        ],
+        "detail": "Wait for HubSpot security and compliance team to review and approve the public application.",
+        "url": null,
+        "kind": "wait",
+        "owner": "provider",
+        "agent_prompt": null,
+        "time": "2-6 weeks",
+        "minutes_min": 20160,
+        "minutes_max": 60480,
+        "waiting_on": "HubSpot App Review Team",
+        "done_when": "App is approved and listed",
+        "evidence": "verified"
+      },
+      {
+        "title": "Test end-to-end contact creation",
+        "stage": "connect",
+        "actions": [
+          "Trigger the agent to ingest a mock inbox lead",
+          "Verify the contact appears in HubSpot CRM"
+        ],
+        "detail": "Execute a full test to verify that user sign-in, token storage, and contact creation execute successfully.",
+        "url": null,
+        "kind": "test",
+        "owner": "you",
+        "agent_prompt": "Write a test script that uses a valid HubSpot OAuth token to call the CRM contacts API and create a new test contact.",
+        "time": "10 min",
+        "minutes_min": 5,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "Test contact is successfully added via agent execution",
+        "evidence": "verified"
+      },
+      {
+        "title": "Make your agent do the job",
+        "actions": [
+          "Copy the prompt below into your coding agent.",
+          "Run it once with your own account."
+        ],
+        "detail": "This is the point of the prototype: your agent using the connection.",
+        "url": null,
+        "kind": "test",
+        "owner": "agent",
+        "time": "15-30 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "done_when": "Your agent completed the job in HubSpot for your own account.",
+        "evidence": "inferred",
+        "agent_prompt": "First check the connect step really happened: the HubSpot tool exists and is registered with my agent.  If anything is missing, stop and tell me what. Otherwise run my agent once on this job with my own account: Add new leads from the user's inbox as HubSpot contacts. Show me what changed in HubSpot."
+      }
+    ],
+    "glossary": [
+      {
+        "term": "redirect URI",
+        "plain": "The URL where the provider sends users after they approve or deny access to your application."
+      }
+    ],
+    "scopes": [
+      {
+        "scope": "crm.objects.contacts.write",
+        "why": "Required to create and update contact records in HubSpot CRM from inbox leads.",
+        "sensitivity": "sensitive"
+      }
+    ],
+    "approval": {
+      "required": "yes",
+      "process": "Marketplace review and security assessment triggered when scaling past installation caps.",
+      "wait": "2-6 weeks",
+      "evidence": "verified"
+    },
+    "blockers": [
+      {
+        "blocker": "Installation caps for unlisted apps",
+        "impact": "high",
+        "mitigation": "Submit app for marketplace review before scaling past 10 private portals or 25 public installs.",
+        "step": 4,
+        "evidence": "verified"
+      }
+    ],
+    "alternatives": [
+      "Use Composio managed OAuth",
+      "Use HubSpot private app token for single-user testing"
+    ],
+    "agent_can_do": [
+      "Implement OAuth token exchange logic",
+      "Call API endpoints to create contacts",
+      "Run end-to-end test scripts"
+    ],
+    "you_must_do": [
+      "Sign up for a developer account",
+      "Create a HubSpot app and configure redirect URIs",
+      "Submit app for marketplace review"
+    ],
+    "next_action": "Sign up for a HubSpot developer account and create your app configuration.",
+    "open_questions": [
+      "Exact turnaround time for marketplace review queue variants"
+    ],
+    "sources": [
+      {
+        "title": "How to create OAuth2 credentials for HubSpot | Composio",
+        "url": "https://composio.dev/auth/hubspot",
+        "used_for": "OAuth scope requirements and toolkit capabilities"
+      },
+      {
+        "title": "HubSpot Toolkit | Composio Docs",
+        "url": "https://docs.composio.dev/toolkits/hubspot.md",
+        "used_for": "Toolkit action structure and managed authentication options"
+      },
+      {
+        "title": "New Marketplace Distribution App Install Limits | HubSpot Developer Changelog",
+        "url": "https://developers.hubspot.com/changelog/new-marketplace-distribution-app-install-limits",
+        "used_for": "App install caps and marketplace distribution rules"
+      }
+    ],
+    "searched_urls": [
+      {
+        "url": "https://composio.dev/auth/hubspot",
+        "title": "How to create OAuth2 credentials for HubSpot | Composio"
+      },
+      {
+        "url": "https://docs.composio.dev/toolkits/hubspot.md",
+        "title": "HubSpot"
+      },
+      {
+        "url": "https://docs.composio.dev/kb/guide/toolkits-hubspot",
+        "title": "HubSpot (/kb/guide/toolkits-hubspot)"
+      }
+    ],
+    "written_by": "parallel chat research + parallel json",
+    "fit": {
+      "actions": [
+        {
+          "action": "create contact",
+          "needs_trigger": false
+        }
+      ],
+      "dimensions": [
+        {
+          "key": "auth_type",
+          "applies": "yes",
+          "note": "Uses OAuth 2.0 sign-in."
+        },
+        {
+          "key": "registration",
+          "applies": "yes",
+          "note": "Developer signup goes through free CRM onboarding asking for a website."
+        },
+        {
+          "key": "review",
+          "applies": "depends",
+          "note": "None for your own account; Marketplace listing and app review needed before public launch."
+        },
+        {
+          "key": "distribution_limits",
+          "applies": "yes",
+          "note": "Privately distributed apps capped at 10 portals; Marketplace apps capped at 25 installs until listed."
+        },
+        {
+          "key": "per_customer_instance",
+          "applies": "yes",
+          "note": "Each user connects their own HubSpot portal."
+        },
+        {
+          "key": "admin_consent",
+          "applies": "yes",
+          "note": "May require admin permissions to install apps in a HubSpot portal."
+        },
+        {
+          "key": "tokens",
+          "applies": "yes",
+          "note": "Access tokens require regular refreshing handled by Composio or your custom code."
+        },
+        {
+          "key": "scopes_vs_actions",
+          "applies": "yes",
+          "note": "Requires write permissions for contacts."
+        },
+        {
+          "key": "sandbox_vs_production",
+          "applies": "yes",
+          "note": "Testing requires a developer test account or a free trial portal."
+        },
+        {
+          "key": "triggers",
+          "applies": "no",
+          "note": "Agent performs contact creation on demand or via lead flow."
+        },
+        {
+          "key": "composio_layer",
+          "applies": "yes",
+          "note": "Composio supports Hubspot with managed auth and pre-built actions."
+        }
+      ],
+      "composio": {
+        "toolkit_available": "yes",
+        "toolkit_slug": "hubspot",
+        "covers_use_case": "yes",
+        "matching_actions": [
+          "hubspot_create_contact"
+        ],
+        "managed_auth": "yes",
+        "note": "Composio has a HubSpot toolkit with 323 actions; Composio can handle the sign-in for you.",
+        "evidence": "verified",
+        "tools_count": 323,
+        "catalog_checked": true,
+        "api_checked": true
+      },
+      "answers": {
+        "users": "my_users",
+        "connect_via": "direct"
+      },
+      "decisions": [
+        {
+          "id": "users",
+          "title": "Who will connect their account?",
+          "why_it_matters": "Other people signing in can mean an approval wait.",
+          "show_if": null,
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "my_users",
+              "label": "My users",
+              "what_it_means": "Other people connect their own accounts to your agent.",
+              "pros": [
+                "Ready to launch"
+              ],
+              "cons": [
+                "May need the app's approval"
+              ],
+              "time": "Hours",
+              "wait": "Varies by app",
+              "cost": "Usually free",
+              "recommended": true,
+              "recommended_reason": "You're building for other people, so the guide covers what it takes to launch."
+            },
+            {
+              "value": "just_me",
+              "label": "Just me",
+              "what_it_means": "Only your own account, to try the idea first.",
+              "pros": [
+                "Fastest start",
+                "Usually no approval"
+              ],
+              "cons": [
+                "Others can't connect yet"
+              ],
+              "time": "Under an hour",
+              "wait": "Usually none",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "id": "connect_via",
+          "title": "How will your agent connect to this app?",
+          "why_it_matters": "Choose how your agent signs in and manages HubSpot access for users.",
+          "show_if": null,
+          "options": [
+            {
+              "value": "composio",
+              "label": "Use Composio",
+              "what_it_means": "Composio hosts the sign-in, manages tokens, and gives ready-made HubSpot actions.",
+              "pros": [
+                "Working in minutes",
+                "Zero auth code",
+                "Automatic token refreshes"
+              ],
+              "cons": [
+                "Depends on third-party service",
+                "Extra platform configuration"
+              ],
+              "time": "Minutes",
+              "wait": "None",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "Composio provides instant access to HubSpot with managed sign-in and pre-built actions, saving weeks of OAuth setup."
+            },
+            {
+              "value": "direct",
+              "label": "Direct OAuth App",
+              "what_it_means": "You register your own HubSpot app, handle sign-in, and store tokens yourself.",
+              "pros": [
+                "Full control",
+                "No third-party dependency"
+              ],
+              "cons": [
+                "Complex token refresh",
+                "Strict install limits",
+                "Weeks of setup"
+              ],
+              "time": "Days to weeks",
+              "wait": "Days to weeks",
+              "cost": "Free developer account",
+              "recommended": false,
+              "recommended_reason": "Requires building custom OAuth and token management from scratch."
+            }
+          ],
+          "evidence": "verified"
+        },
+        {
+          "id": "branding",
+          "title": "Whose name should users see at sign-in?",
+          "why_it_matters": "Your own name means your own approval.",
+          "show_if": {
+            "connect_via": "composio",
+            "users": "my_users"
+          },
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "composio_name",
+              "label": "Composio's name",
+              "what_it_means": "Users sign in through Composio's HubSpot app, already approved.",
+              "pros": [
+                "No app to register",
+                "No review for you"
+              ],
+              "cons": [
+                "Composio's name on screen"
+              ],
+              "time": "Minutes",
+              "wait": "None",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "It skips registering and reviewing your own app. You can switch to your own later."
+            },
+            {
+              "value": "own_app",
+              "label": "Your own app",
+              "what_it_means": "Register your own HubSpot app and plug it into Composio.",
+              "pros": [
+                "Your name on screen",
+                "Your own limits"
+              ],
+              "cons": [
+                "You go through review"
+              ],
+              "time": "Hours",
+              "wait": "Depends on the app",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        }
+      ]
+    },
+    "link_check": {
+      "at": "2026-10-30T12:04:02.603Z",
+      "total": 5,
+      "ok": 5,
+      "unverified": 0,
+      "fixed": 0,
+      "removed": 0
+    }
+  },
+  "library": {
+    "order": 2,
+    "challenge": "Developer account and test accounts; marketplace listing only to be listed publicly.",
+    "tested": "Sources checked",
+    "built_from": "hubspot-mvuxc5uz"
+  }
+}

@@ -1,0 +1,474 @@
+{
+  "id": "lib-xero",
+  "created_at": "2026-10-30T12:05:47.884Z",
+  "model": "parallel chat research + parallel json",
+  "input": {
+    "app": "Xero",
+    "job": "Create draft invoices in the user's Xero organisation",
+    "answers": {
+      "users": "my_users",
+      "connect_via": "direct"
+    },
+    "route": "Direct custom code"
+  },
+  "guide": {
+    "app": "Xero",
+    "website": "https://www.xero.com",
+    "job": "Create draft invoices in the user's Xero organisation",
+    "job_assumed": false,
+    "summary": "To build an AI agent that creates draft invoices in users' Xero organisations using direct custom code, you must register an OAuth 2.0 app on the Xero Developer Portal, handle token storage and refresh rotation, and manage tier-based connection limits.",
+    "verdict": {
+      "difficulty": "moderate",
+      "difficulty_reason": "Direct OAuth implementation requires handling token storage, refresh rotation, tenant header passing, and managing tier-based connection limits starting at 5 connections on the Starter tier.",
+      "hands_on_time": "45-60 min",
+      "approval_wait": "none for testing; tier upgrades apply as connection limits are reached",
+      "oauth_supported": "yes"
+    },
+    "composio": {
+      "managed_oauth": "no",
+      "toolkit_available": "yes",
+      "note": "Composio provides a Xero toolkit with 74 actions, but managed auth is not available, requiring your own credentials.",
+      "evidence": "verified",
+      "api_checked": true,
+      "tools_count": 74
+    },
+    "route": {
+      "choice": "own_oauth_app",
+      "name": "Direct custom code",
+      "reason": "Your code handles the Xero sign-in flow, database storage for tokens, and API requests manually.",
+      "hands_on_time": "45-60 min",
+      "wait": "none",
+      "cost": "Free starter tier (up to 5 connections)"
+    },
+    "costs": [
+      {
+        "item": "Xero Developer Account / Starter Tier",
+        "amount": "free",
+        "when": "at registration",
+        "required": "yes",
+        "evidence": "verified"
+      },
+      {
+        "item": "Core Tier",
+        "amount": "$35 AUD/month",
+        "when": "when exceeding 5 connections",
+        "required": "depends",
+        "evidence": "verified"
+      }
+    ],
+    "paths": [
+      {
+        "name": "Direct custom code",
+        "when_to_choose": "When building custom OAuth flow and token management into your agent codebase.",
+        "tradeoffs": "Full control over token storage and API requests, but requires manual handling of refresh rotation and tenant IDs.",
+        "recommended": true
+      },
+      {
+        "name": "Composio managed OAuth",
+        "when_to_choose": "When you want to leverage pre-built toolkit actions without manual OAuth configuration.",
+        "tradeoffs": "Managed auth is not available for Xero in Composio, so custom credentials are required.",
+        "recommended": false
+      }
+    ],
+    "prerequisites": [
+      {
+        "item": "Xero Developer Account",
+        "how_to_get": "Sign up on the Xero Developer Portal to create and manage OAuth apps.",
+        "needs": [
+          {
+            "item": "A valid email address and account",
+            "ok_if": "A personal or business Xero login works",
+            "later": null
+          }
+        ],
+        "actions": [
+          "Go to the Xero Developer Portal and sign in or create an account"
+        ],
+        "url": "https://developer.xero.com",
+        "time": "5 min",
+        "done_when": "You can access the developer dashboard to create a new app.",
+        "blocks_route": true,
+        "evidence": "verified"
+      }
+    ],
+    "friction_checks": [
+      {
+        "stage": "register",
+        "check": "Do you need a developer account to register an OAuth app?",
+        "answer": "Yes, a Xero Developer account is required.",
+        "handled_in": "Prerequisites",
+        "evidence": "verified"
+      },
+      {
+        "stage": "redirect",
+        "check": "Are localhost callback URLs supported for testing?",
+        "answer": "Yes, local callback URLs are supported for prototype development.",
+        "handled_in": "Step 2",
+        "evidence": "inferred"
+      }
+    ],
+    "steps": [
+      {
+        "title": "Create a Xero Developer App",
+        "stage": "register",
+        "actions": [
+          "Log into the Xero Developer Portal",
+          "Click **New App**",
+          "Fill in app name, company URL, and redirect URI"
+        ],
+        "detail": "Registering your application generates your client ID and client secret, which are required for initiating the OAuth 2.0 authorization code flow.",
+        "url": "https://developer.xero.com",
+        "kind": "register",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "10 min",
+        "minutes_min": 10,
+        "minutes_max": 15,
+        "waiting_on": null,
+        "done_when": "Client ID and client secret are generated and displayed in your dashboard.",
+        "evidence": "verified",
+        "link_status": "ok"
+      },
+      {
+        "title": "Configure Environment Variables",
+        "stage": "credentials",
+        "actions": [
+          "Copy your Client ID and Client Secret",
+          "Add them to your agent's `.env` file"
+        ],
+        "detail": "Store your credentials securely in your environment variables so your code can authenticate authorization requests without exposing secrets.",
+        "url": null,
+        "kind": "credentials",
+        "owner": "you",
+        "agent_prompt": null,
+        "time": "5 min",
+        "minutes_min": 5,
+        "minutes_max": 10,
+        "waiting_on": null,
+        "done_when": "Credentials are saved securely in the environment file.",
+        "evidence": "verified"
+      },
+      {
+        "title": "Implement OAuth Sign-In Flow",
+        "stage": "code",
+        "actions": [
+          "Write code to redirect users to Xero's authorization endpoint",
+          "Handle the callback code exchange",
+          "Store access and refresh tokens securely"
+        ],
+        "detail": "Your agent must direct users to Xero to authenticate and grant permissions, capturing the authorization code and exchanging it for tokens.",
+        "url": null,
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write an OAuth 2.0 authorization route in Express/Python that redirects users to Xero's auth URL with scopes 'accounting.transactions offline_access', handles the callback, and exchanges the authorization code for tokens.",
+        "time": "20 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "waiting_on": null,
+        "done_when": "Users can successfully authenticate and tokens are stored in the database.",
+        "evidence": "verified"
+      },
+      {
+        "title": "Fetch Tenant ID and Test API",
+        "stage": "code",
+        "actions": [
+          "Query Xero connections endpoint to retrieve `xero-tenant-id`",
+          "Include `xero-tenant-id` and Bearer token in request headers"
+        ],
+        "detail": "Xero requires every API request to specify which organization (tenant) it targets, alongside the Bearer access token.",
+        "url": null,
+        "kind": "code",
+        "owner": "agent",
+        "agent_prompt": "Write a function that fetches the connected Xero tenants using GET https://api.xero.com/api.xro/2.0/Connections and stores the active tenant ID for subsequent API calls.",
+        "time": "15 min",
+        "minutes_min": 10,
+        "minutes_max": 20,
+        "waiting_on": null,
+        "done_when": "The active tenant ID is successfully fetched and mapped to the user session.",
+        "evidence": "verified"
+      },
+      {
+        "title": "Create Draft Invoices via API",
+        "stage": "test",
+        "actions": [
+          "Construct JSON payload for draft invoice",
+          "Send POST request to Xero Accounting API invoices endpoint"
+        ],
+        "detail": "With tokens and tenant ID ready, your agent can now call the Xero API to create draft invoices on behalf of the authenticated user.",
+        "url": null,
+        "kind": "test",
+        "agent_prompt": "Write an API integration function that posts a JSON payload to https://api.xero.com/api.xro/2.0/Invoices with Type 'ACCREC', Status 'AUTHORISED' or 'DRAFT', using the Bearer token and xero-tenant-id header.",
+        "time": "15 min",
+        "minutes_min": 10,
+        "minutes_max": 20,
+        "waiting_on": null,
+        "done_when": "A draft invoice is successfully created in the test user's Xero organization.",
+        "evidence": "verified"
+      },
+      {
+        "title": "Make your agent do the job",
+        "actions": [
+          "Copy the prompt below into your coding agent.",
+          "Run it once with your own account."
+        ],
+        "detail": "This is the point of the prototype: your agent using the connection.",
+        "url": null,
+        "kind": "test",
+        "owner": "agent",
+        "time": "15-30 min",
+        "minutes_min": 15,
+        "minutes_max": 30,
+        "done_when": "Your agent completed the job in Xero for your own account.",
+        "evidence": "inferred",
+        "agent_prompt": "First check the connect step really happened: the Xero tool exists and is registered with my agent.  If anything is missing, stop and tell me what. Otherwise run my agent once on this job with my own account: Create draft invoices in the user's Xero organisation. Show me what changed in Xero."
+      }
+    ],
+    "glossary": [
+      {
+        "term": "redirect URI",
+        "plain": "The URL where the provider sends the user after they approve or deny your application's access request."
+      },
+      {
+        "term": "xero-tenant-id",
+        "plain": "A unique identifier header required by Xero to specify which organization account your API request is modifying."
+      }
+    ],
+    "scopes": [
+      {
+        "scope": "accounting.transactions",
+        "why": "Required to create and manage invoices and financial records.",
+        "sensitivity": "sensitive"
+      },
+      {
+        "scope": "offline_access",
+        "why": "Required to obtain a refresh token so your agent can maintain access when the user is offline.",
+        "sensitivity": "sensitive"
+      }
+    ],
+    "approval": {
+      "required": "depends",
+      "process": "None for testing and starter limits (up to 5 connections). Core tier supports up to 50 connections ($35 AUD/month). Plus tier (1,000 connections) requires App Certification, and Advanced/Enterprise require a security assessment.",
+      "wait": "none for self-serve tiers; variable for certification reviews",
+      "evidence": "verified"
+    },
+    "blockers": [
+      {
+        "blocker": "Starter tier connection limit of 5 connections",
+        "impact": "medium",
+        "mitigation": "Upgrade to Core tier ($35 AUD/month) for up to 50 connections, or pursue App Certification for higher tiers.",
+        "step": 0,
+        "evidence": "verified"
+      }
+    ],
+    "alternatives": [
+      "Composio toolkit integration (using custom credentials)"
+    ],
+    "agent_can_do": [
+      "Write OAuth redirect and callback handling code",
+      "Implement token storage and refresh rotation logic",
+      "Fetch tenant connections and construct API requests for invoices"
+    ],
+    "you_must_do": [
+      "Register the Xero developer app",
+      "Copy client credentials into environment variables",
+      "Manage tier upgrades if connection limits are exceeded"
+    ],
+    "next_action": "Go to the Xero Developer Portal to create your developer app and obtain your client ID and secret.",
+    "open_questions": [
+      "Exact review duration for App Certification and security assessments on higher tiers."
+    ],
+    "sources": [
+      {
+        "title": "Xero Developer Portal Pricing and Limits",
+        "url": "https://developer.xero.com/pricing",
+        "used_for": "Pricing tiers, connection limits, and certification requirements."
+      }
+    ],
+    "searched_urls": [],
+    "written_by": "parallel chat research + parallel json",
+    "fit": {
+      "actions": [
+        {
+          "action": "Create draft invoices",
+          "needs_trigger": false
+        }
+      ],
+      "dimensions": [
+        {
+          "key": "auth_type",
+          "applies": "yes",
+          "note": "Xero strictly uses OAuth 2.0 and does not support basic API keys."
+        },
+        {
+          "key": "registration",
+          "applies": "yes",
+          "note": "Free self-serve creation on the Xero Developer Portal."
+        },
+        {
+          "key": "review",
+          "applies": "yes",
+          "note": "None for your own account; Starter and Core tiers limit connections (5 and 50 respectively), while Plus (1,000 connections) requires App Certification, and Advanced/Enterprise require a security assessment."
+        },
+        {
+          "key": "distribution_limits",
+          "applies": "yes",
+          "note": "Starter tier caps connections at 5; Core tier caps connections at 50 ($35 AUD/month)."
+        },
+        {
+          "key": "per_customer_instance",
+          "applies": "yes",
+          "note": "Users select their specific Xero organization/tenant during the sign-in flow."
+        },
+        {
+          "key": "admin_consent",
+          "applies": "yes",
+          "note": "Users or organization administrators must authorize the application scopes and select the tenant organization."
+        },
+        {
+          "key": "tokens",
+          "applies": "yes",
+          "note": "Requires managing access tokens, refresh tokens, and passing the xero-tenant-id header."
+        },
+        {
+          "key": "scopes_vs_actions",
+          "applies": "yes",
+          "note": "Requires accounting transaction scopes to create draft invoices."
+        },
+        {
+          "key": "sandbox_vs_production",
+          "applies": "yes",
+          "note": "Developers can test against a Xero demo company."
+        },
+        {
+          "key": "triggers",
+          "applies": "no",
+          "note": "Creating draft invoices is an agent-initiated action and does not require an event trigger."
+        },
+        {
+          "key": "composio_layer",
+          "applies": "yes",
+          "note": "Composio provides the Xero toolkit and MCP integration, but requires custom OAuth credentials."
+        }
+      ],
+      "composio": {
+        "toolkit_available": "yes",
+        "toolkit_slug": "xero",
+        "covers_use_case": "yes",
+        "matching_actions": [
+          "Create draft invoice"
+        ],
+        "managed_auth": "no",
+        "note": "Composio has a Xero toolkit with 74 actions.",
+        "evidence": "verified",
+        "tools_count": 74,
+        "catalog_checked": true,
+        "api_checked": true
+      },
+      "answers": {
+        "users": "my_users",
+        "connect_via": "direct"
+      },
+      "decisions": [
+        {
+          "id": "users",
+          "title": "Who will connect their account?",
+          "why_it_matters": "Other people signing in can mean an approval wait.",
+          "show_if": null,
+          "evidence": "inferred",
+          "options": [
+            {
+              "value": "my_users",
+              "label": "My users",
+              "what_it_means": "Other people connect their own accounts to your agent.",
+              "pros": [
+                "Ready to launch"
+              ],
+              "cons": [
+                "May need the app's approval"
+              ],
+              "time": "Hours",
+              "wait": "Varies by app",
+              "cost": "Usually free",
+              "recommended": true,
+              "recommended_reason": "You're building for other people, so the guide covers what it takes to launch."
+            },
+            {
+              "value": "just_me",
+              "label": "Just me",
+              "what_it_means": "Only your own account, to try the idea first.",
+              "pros": [
+                "Fastest start",
+                "Usually no approval"
+              ],
+              "cons": [
+                "Others can't connect yet"
+              ],
+              "time": "Under an hour",
+              "wait": "Usually none",
+              "cost": "Usually free",
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "id": "connect_via",
+          "title": "How will your agent connect to this app?",
+          "why_it_matters": "Xero does not provide managed sign-in through Composio, so you must register your own Xero app to handle credentials.",
+          "show_if": null,
+          "options": [
+            {
+              "value": "composio",
+              "label": "Through Composio (BYOA)",
+              "what_it_means": "You register a Xero app, put your credentials into Composio, and let Composio handle tokens.",
+              "pros": [
+                "Ready-made invoice actions",
+                "Automatic token refreshing",
+                "Unified agent code"
+              ],
+              "cons": [
+                "Must register your own app",
+                "Connection caps apply"
+              ],
+              "time": "15-30 minutes",
+              "cost": "Free to start",
+              "recommended": true,
+              "recommended_reason": "Composio provides ready-made Xero tools and token management, requiring only your own Xero developer credentials."
+            },
+            {
+              "value": "direct",
+              "label": "Direct custom code",
+              "what_it_means": "Your code handles the Xero sign-in flow, database storage for tokens, and API requests manually.",
+              "pros": [
+                "Full control over code",
+                "No third-party dependency"
+              ],
+              "cons": [
+                "Build OAuth flow manually",
+                "Write custom API wrappers"
+              ],
+              "time": "Hours to days",
+              "cost": "Free",
+              "recommended": false,
+              "recommended_reason": "Writing manual OAuth and API integration code takes significantly longer than using existing toolkits."
+            }
+          ],
+          "evidence": "verified"
+        }
+      ]
+    },
+    "link_check": {
+      "at": "2026-10-30T12:05:47.884Z",
+      "total": 3,
+      "ok": 3,
+      "unverified": 0,
+      "fixed": 0,
+      "removed": 0
+    }
+  },
+  "library": {
+    "order": 4,
+    "challenge": "Connection cap until the app is certified.",
+    "tested": "Sources checked",
+    "built_from": "xero-mvuxef3g"
+  }
+}
