@@ -15,47 +15,53 @@ Builders want their agent to do a job in someone's Notion, Gmail or HubSpot. To 
 
 ## Walkthrough
 
-### 1. Pick an app
+This example follows a builder who wants their agent to handle Gmail for their users.
 
-Open one of six ready-made guides, or type any app and what your agent should do with it. Each card shows the difficulty, your time and any approval wait up front.
+### 1. Say what your agent should do
 
-![Home page with the app form and ready-made guides](docs/screenshots/1-home.png)
+Type the app and the job. No OAuth knowledge needed.
 
-### 2. Answer two questions
+![App: Gmail. Job: read new emails and draft replies](docs/screenshots/1-home.png)
 
-The app first works out what your agent needs to do in that app. Then it asks only what changes the setup. First: who will connect their account?
+### 2. Answer a few questions
+
+The app works out what the agent needs to do in Gmail, then asks only what changes the setup. First: who will connect their account?
 
 ![Choice: my users or just me](docs/screenshots/2-who-connects.png)
 
-Second: how should your agent connect? When Composio supports the app, it's recommended. The do-it-yourself route is shown honestly beside it.
+Next: how should your agent connect? Composio is recommended because users sign in through its already-approved Gmail app, with no review. Building your own app means Google verification, 2 to 6 weeks. Here the builder picks their own app, to see the full path.
 
-![Choice: use Composio or connect it yourself](docs/screenshots/3-how-to-connect.png)
+![Choice: Composio (recommended) or your own app](docs/screenshots/3-how-to-connect.png)
+
+A summary shows the plan before anything is built. Every choice can still be changed.
+
+![The plan: your time, waiting and cost](docs/screenshots/4-plan.png)
 
 ### 3. See what you're in for
 
 The guide opens with four facts: difficulty, your time, the wait, and the biggest blocker. Each one comes with the reason behind it.
 
-![Guide summary for Notion](docs/screenshots/4-guide-summary.png)
+![Gmail guide: Hard, 2-6 week wait, Google verification is the blocker](docs/screenshots/5-guide-summary.png)
 
 ### 4. See who does what
 
-Every step is marked **You** (clicks in a website) or **Your agent** (code, with a prompt ready to paste into your coding agent). Every claim is labelled verified, inferred or unknown.
+Every step is marked **You** (clicks in a website), **Your agent** (code, with a prompt ready to paste into your coding agent), or a wait on the provider. Every claim is labelled verified, inferred or unknown.
 
-![Guide steps split between you and your agent](docs/screenshots/5-guide-steps.png)
+![Steps split between you, your agent and Google's review](docs/screenshots/6-guide-steps.png)
 
 ### 5. Set it up, one stage at a time
 
-Press Start, and each stage becomes a short chat. Tell it what you see, paste an error, or drop a screenshot. It moves on only when that stage is really done. Stages: register the app, callback and permissions, keys, add sign-in to the agent, connect, do the job, and approval if needed.
+Press Start, and each stage becomes a short chat. Tell it what you see, paste an error, or drop a screenshot. It moves on only when that stage is really done.
 
-![Stage chat for registering the Notion app](docs/screenshots/6-stage-chat.png)
+![Stage chat for registering the Gmail app](docs/screenshots/7-stage-chat.png)
 
-_This screenshot was taken in demo mode, so the answer is canned. With a key, the chat answers from live research._
+_Screenshots were taken from the saved Gmail guide in demo mode, so this chat answer is canned. With a key, the chat answers from live research._
 
 ### 6. Check what we tested
 
-One page shows what we tried by hand, which claims we checked against official docs, what the research got wrong, and what's still uncertain.
+Each library app shows which claims we checked against the provider's official docs, and what's still uncertain.
 
-![What we tested page](docs/screenshots/7-what-we-tested.png)
+![Gmail claims checked against Google's docs](docs/screenshots/8-what-we-tested.png)
 
 ---
 
