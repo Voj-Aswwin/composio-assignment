@@ -1,0 +1,213 @@
+{
+  "as_of": "30 Oct 2026",
+  "summary": "Each library guide was written by the research agent, then its approval claims were checked by hand against the provider's official docs. This page lists what was tried, what held up, what the agent got wrong and how it was fixed, and what is still uncertain.",
+  "method": [
+    "Generated each guide with the same fit check and research a developer gets in the app, for \"my users\" on the developer's own OAuth app.",
+    "Picked the claims that change time, effort or approval (review, caps, admin consent, wait times) and checked each against the provider's official docs page, linked below.",
+    "Walked the setup hands-on with throwaway test agents where noted, logging every point where the guide's chat was wrong or vague.",
+    "Saved each checked fact here and fed it back to the research agent for that app, so the next guide uses the corrected version. Then regenerated the guide."
+  ],
+  "learnings": [
+    {
+      "title": "Approval is usually conditional, not yes or no",
+      "text": "GitHub needs no review, but new organisations block OAuth apps until an owner approves. HubSpot needs no review, but unlisted apps stop at 25 installs. Xero is free up to 5 connections, then a paid tier, then certification above 50. A useful guide says when each one applies, so the agent now has to name the condition instead of adding a blanket wait step."
+    },
+    {
+      "title": "The cheapest model invents approval steps",
+      "text": "The first library pass fell back to Gemini Flash-Lite and confidently added reviews that don't exist (Slack) and turned optional listings into required waits. Evidence labels alone didn't catch it. Fixes: keep requests within the research model's limit so the stronger model writes the guide, rate difficulty on provider facts only, and keep optional listings out of the step list."
+    },
+    {
+      "title": "Difficulty is about the provider, not the code",
+      "text": "Every app needs the same OAuth code, which a coding agent writes in minutes. The first pass rated GitHub Medium because of that code. Difficulty now rates what the developer can't speed up: reviews, certification, user caps and admin consent."
+    },
+    {
+      "title": "Composio's managed app removes the approval wait",
+      "text": "With managed auth, users sign in through Composio's app, which the provider has already approved. For Gmail that skips weeks of verification and a security assessment. The trade-off is Composio's name on the sign-in screen, so the guide now asks that question only when other people will sign in."
+    },
+    {
+      "title": "One long guide doesn't survive contact with real screens",
+      "text": "Testers got stuck in the middle: which app type to pick, which secret to copy, the page picker at sign-in. The setup now runs as one chat per stage that sees screenshots and errors and only moves on when its checklist is met."
+    }
+  ],
+  "apps": [
+    {
+      "id": "lib-github",
+      "app": "GitHub",
+      "tried": [],
+      "checked": [
+        {
+          "claim": "Registering an OAuth app is self-serve, with no review.",
+          "verdict": "confirmed",
+          "source": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions",
+          "source_title": "GitHub: OAuth app access restrictions"
+        },
+        {
+          "claim": "Organisation consent can block access to org repositories.",
+          "verdict": "confirmed",
+          "note": "New organisations have OAuth app access restrictions on by default, so an owner must approve the app before it can reach org data. Personal repositories are not affected.",
+          "source": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions",
+          "source_title": "GitHub: OAuth app access restrictions"
+        },
+        {
+          "claim": "First pass: difficulty Medium.",
+          "verdict": "corrected",
+          "note": "Rated on coding effort. With difficulty rated on provider facts, GitHub is Easy for personal repos.",
+          "source": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/differences-between-github-apps-and-oauth-apps",
+          "source_title": "GitHub: GitHub Apps vs OAuth apps"
+        }
+      ],
+      "unverified": [
+        "How long organisation owners take to approve: it depends entirely on the organisation."
+      ]
+    },
+    {
+      "id": "lib-notion",
+      "app": "Notion",
+      "tried": [
+        "Signed in for real: a test agent (test-agent-notion/) completed Notion's OAuth sign-in with a public connection, exchanged the code using HTTP Basic, saved the token, and its chat read a real page from the developer's own workspace. No review was needed for that.",
+        "Walked the register, callback, keys and code stages with that agent first and logged 28 frictions. The worst ones (Internal vs Public, the wrong secret, the page picker, HTTP Basic, the redirect URI vs the authorization URL) are now rules in the stage chats.",
+        "The first regenerated guide fell back to a weaker model after a Parallel error and claimed a required 2-6 week review. Rerun with Parallel, it treats review as optional (Marketplace listing only), which matches the hands-on sign-in."
+      ],
+      "checked": [
+        {
+          "claim": "Use a public connection, which has an OAuth client ID and secret on the Configuration tab.",
+          "verdict": "confirmed",
+          "source": "https://developers.notion.com/guides/get-started/public-connections",
+          "source_title": "Notion: Public connections"
+        },
+        {
+          "claim": "Installation scope (Any workspace or Selected workspaces only) can't be changed after creation.",
+          "verdict": "confirmed",
+          "note": "The first chat recommended Any workspace without saying it's permanent; it now warns.",
+          "source": "https://developers.notion.com/guides/get-started/public-connections",
+          "source_title": "Notion: Public connections"
+        },
+        {
+          "claim": "The token exchange sends the client ID and secret in the JSON body.",
+          "verdict": "corrected",
+          "note": "Notion uses HTTP Basic authentication with base64 of client_id:client_secret. Confirmed hands-on: the test agent's sign-in worked with Basic.",
+          "source": "https://developers.notion.com/guides/get-started/authorization",
+          "source_title": "Notion: Authorization"
+        },
+        {
+          "claim": "The user picks which pages to share during sign-in.",
+          "verdict": "confirmed",
+          "note": "The first chats never warned about it; skipping it makes every write fail.",
+          "source": "https://developers.notion.com/guides/get-started/authorization",
+          "source_title": "Notion: Authorization"
+        },
+        {
+          "claim": "The Authorization URL is always shown in the console.",
+          "verdict": "corrected",
+          "note": "Notion says the field populates after the connection is submitted for review. Until then the agent builds the URL from client_id, redirect_uri, response_type=code and owner=user.",
+          "source": "https://developers.notion.com/guides/get-started/authorization",
+          "source_title": "Notion: Authorization"
+        }
+      ],
+      "unverified": [
+        "Whether other people's workspaces can install a public connection before Notion reviews it. Sign-in worked in the developer's own workspace without review; the docs mention review only for the Authorization URL and the Marketplace.",
+        "The guide's 5-10 business days for a Marketplace listing review comes from search results, not an official Notion page. The listing is optional."
+      ]
+    },
+    {
+      "id": "lib-hubspot",
+      "app": "HubSpot",
+      "tried": [],
+      "checked": [
+        {
+          "claim": "A marketplace listing matters for launch.",
+          "verdict": "confirmed",
+          "note": "Apps distributed through the Marketplace are capped at 25 installs until listed (since 22 Sep 2025). Privately distributed apps are capped at 10 portals.",
+          "source": "https://developers.hubspot.com/changelog/new-marketplace-distribution-app-install-limits",
+          "source_title": "HubSpot: Marketplace distribution install limits"
+        },
+        {
+          "claim": "HubSpot requires OAuth 2.1 with PKCE.",
+          "verdict": "unverified",
+          "note": "Not found in the pages checked. Flagged for a re-check after the rerun.",
+          "source": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/manage-apps-in-hubspot",
+          "source_title": "HubSpot: Manage apps"
+        }
+      ],
+      "unverified": [
+        "How long Marketplace review takes: HubSpot doesn't publish a number.",
+        "The 2-6 week Marketplace review wait in the guide is not published by HubSpot; treat it as an estimate."
+      ]
+    },
+    {
+      "id": "lib-slack",
+      "app": "Slack",
+      "tried": [],
+      "checked": [
+        {
+          "claim": "First pass: other workspaces need an app review (1-7 days).",
+          "verdict": "corrected",
+          "note": "Public distribution needs a checklist and the Activate Public Distribution button, not a review. Only the optional Slack Marketplace listing is reviewed.",
+          "source": "https://docs.slack.dev/app-management/distribution/",
+          "source_title": "Slack: App lifecycle and distribution"
+        },
+        {
+          "claim": "Workspace admins can block installs.",
+          "verdict": "confirmed",
+          "note": "Some workspaces only let admins install apps, or require an approval request.",
+          "source": "https://docs.slack.dev/app-management/distribution/",
+          "source_title": "Slack: App lifecycle and distribution"
+        },
+        {
+          "claim": "Redirect URLs must use HTTPS once the app is distributed.",
+          "verdict": "confirmed",
+          "source": "https://docs.slack.dev/app-management/distribution/",
+          "source_title": "Slack: App lifecycle and distribution"
+        }
+      ],
+      "unverified": [
+        "How long Marketplace review takes, if they choose to list."
+      ]
+    },
+    {
+      "id": "lib-xero",
+      "app": "Xero",
+      "tried": [],
+      "checked": [
+        {
+          "claim": "Connections are capped until the app moves up a tier.",
+          "verdict": "confirmed",
+          "note": "Starter: 5 connections, free. Core: 50, $35 AUD/month. Plus (1,000) needs App Certification; Advanced and Enterprise also need a security assessment.",
+          "source": "https://developer.xero.com/pricing",
+          "source_title": "Xero Developer: Pricing"
+        }
+      ],
+      "unverified": [
+        "How long App Certification takes."
+      ]
+    },
+    {
+      "id": "lib-gmail",
+      "app": "Gmail",
+      "tried": [],
+      "checked": [
+        {
+          "claim": "Restricted scopes need Google verification before the public can sign in, and re-verification every year.",
+          "verdict": "confirmed",
+          "source": "https://support.google.com/cloud/answer/9110914?hl=en-GB",
+          "source_title": "Google: OAuth API verification FAQs"
+        },
+        {
+          "claim": "In Testing, only listed test users (up to 100) can sign in, and refresh tokens expire after 7 days.",
+          "verdict": "confirmed",
+          "source": "https://developers.google.com/identity/protocols/oauth2/production-readiness/overview",
+          "source_title": "Google: OAuth app state overview"
+        },
+        {
+          "claim": "Unverified published apps with restricted scopes stop at 100 users.",
+          "verdict": "confirmed",
+          "source": "https://support.google.com/cloud/answer/7454865?hl=en",
+          "source_title": "Google: Unverified apps"
+        }
+      ],
+      "unverified": [
+        "How long verification and the security assessment take, and what the assessment costs: the pages checked give no numbers."
+      ]
+    }
+  ]
+}
