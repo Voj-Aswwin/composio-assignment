@@ -371,7 +371,7 @@ function renderFit() {
     el.innerHTML = `<div class="wiz">
       ${top("Ready", 100)}
       <h1>Here's your plan</h1>
-      <p class="sub">Set up for your own account only, as a prototype. You can change any choice before we build the guide.</p>
+      <p class="sub">${intake.answers.users === "just_me" ? "Set up for your own account only, as a prototype." : "Set up so other people can connect their own accounts."} You can change any choice before we build the guide.</p>
       <div class="sum">
         <div class="big3">
           <div><span class="label">Your time</span><strong>${esc(via.time || "Varies")}</strong></div>
