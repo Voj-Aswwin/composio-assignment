@@ -1474,6 +1474,10 @@ function normalizeVerdict(g) {
     v.difficulty_adjusted = "Rated hard by the research agent; lowered because no review or wait is required for this audience.";
     g.verdict = v;
   }
+  // An optional listing's review time isn't a wait the developer has to sit through.
+  if (!waits && (req === "no" || req === "depends")) {
+    for (const o of [g.route, v]) for (const k of ["wait", "approval_wait"]) if (o && /\d/.test(o[k] || "")) o[k] = "None required";
+  }
   return g;
 }
 

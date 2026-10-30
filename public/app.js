@@ -1438,7 +1438,7 @@ function renderGuide(rec) {
     ${(g.searched_urls || []).length ? `<p class="muted small">The agent also saw ${g.searched_urls.length} other pages while researching.</p>` : ""}
   </details>
 
-  <p class="muted small footer">${lc ? `Links tested before publishing: ${lc.ok} working${lc.fixed ? `, ${lc.fixed} replaced` : ""}${lc.removed ? `, ${lc.removed} dead link${lc.removed === 1 ? "" : "s"} removed` : ""}${lc.unverified ? `, ${lc.unverified} behind a login or bot check` : ""}. ` : `Links in this guide were not tested yet. <button class="linkbtn" data-check-links>Test links now</button> `}Generated ${new Date(rec.created_at).toLocaleString()} by ${esc(rec.model)}${rec.model === "demo" ? " (canned demo data)" : " from live web research"}. Nothing here was tested against a live account.</p>`;
+  <p class="muted small footer">${lc ? `Links tested before publishing: ${lc.ok} working${lc.fixed ? `, ${lc.fixed} replaced` : ""}${lc.removed ? `, ${lc.removed} dead link${lc.removed === 1 ? "" : "s"} removed` : ""}${lc.unverified ? `, ${lc.unverified} behind a login or bot check` : ""}. ` : `Links in this guide were not tested yet. <button class="linkbtn" data-check-links>Test links now</button> `}Generated ${new Date(rec.created_at).toLocaleString()} by ${esc(rec.model)}${rec.model === "demo" ? " (canned demo data)" : " from live web research"}. ${rec.library ? `Approval claims checked by hand: <a href="/evidence#${esc(rec.id)}">What we tested</a>.` : "Nothing here was tested against a live account."}</p>`;
 }
 
 function toMarkdown(rec) {
