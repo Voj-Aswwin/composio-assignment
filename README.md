@@ -14,7 +14,7 @@ Builders want their agent to do a job in someone's Notion, Gmail or HubSpot. To 
 - It recommends Composio's already-approved app when building your own means a review wait.
 - It shows the do-it-yourself route beside it, so the recommendation stays credible.
 
-**Try it:** [hosted demo](#) _(link added after deploy)_. Open a ready-made guide, research any app live (1-3 minutes), or read [What we tested](#what-we-tested-and-whats-uncertain).
+**Try it:** [agent-connect-guides.onrender.com](https://agent-connect-guides.onrender.com/) (free hosting, so the first visit can take about 30 seconds to wake up). Open a ready-made guide, research any app live (1-3 minutes), or read [What we tested](#what-we-tested-and-whats-uncertain).
 
 ---
 
