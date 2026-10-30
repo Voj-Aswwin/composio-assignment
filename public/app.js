@@ -254,6 +254,7 @@ $("#form").addEventListener("submit", async (e) => {
   }
 });
 
+const CMP = `<img class="cmp-mark" src="/composio-mark.svg" alt="Composio">`;
 const YES = (v) => String(v || "").toLowerCase().startsWith("yes");
 
 // Plain explanation of Composio, shown before any decision that mentions it. Fixed text, checked
@@ -286,7 +287,7 @@ function composioLine(brief) {
     : YES(c.toolkit_available) ? `Composio supports ${brief.app}, but maybe not all of this job.`
     : `Composio doesn't support ${brief.app} yet. You can still connect it yourself, or pick a similar app it does support.`;
   return `<div class="found ${covered ? "yes" : "no"}">
-    <span>${covered ? "✓" : "!"}</span>
+    <span>${covered ? CMP : "!"}</span>
     <div>${explain(text, null)}
       ${!YES(c.toolkit_available) ? `<div class="found-act"><button type="button" class="secondary small-btn" data-request-toolkit>Ask Composio to add ${esc(brief.app)}</button> <span class="small muted" id="req-note"></span></div>` : ""}
       <details class="more"><summary>What we found</summary>
@@ -305,7 +306,7 @@ function optionCard(d, o) {
   const facts = [o.time && `⏱ ${esc(o.time)}`, o.wait && !NONE.test(o.wait) && `⏳ ${esc(o.wait)}`, o.cost && `💲 ${esc(o.cost)}`].filter(Boolean);
   const picked = intake.answers[d.id] === o.value;
   return `<button type="button" class="pcard ${picked ? "sel" : ""}" data-q="${esc(d.id)}" data-v="${esc(o.value)}" aria-pressed="${picked}">
-    <h3><span>${explain(o.label, null)}</span>${o.recommended ? `<span class="pill agent">Recommended</span>` : ""}</h3>
+    <h3><span>${/composio/i.test(o.label) && !/own app/i.test(o.label) ? CMP + " " : ""}${explain(o.label, null)}</span>${o.recommended ? `<span class="pill agent">Recommended</span>` : ""}</h3>
     ${o.what_it_means ? `<p class="one">${explain(o.what_it_means, null)}</p>` : ""}
     ${pc.length ? `<ul class="pc">${pc.join("")}</ul>` : ""}
     ${facts.length ? `<div class="facts">${facts.map((f) => `<span class="fact">${f}</span>`).join("")}</div>` : ""}
@@ -1346,7 +1347,7 @@ function renderRouteCard(g) {
   return `
   <section class="route card">
     <span class="label">Your route</span>
-    <h2>${esc(r?.name || recPath.name)} ${r?.choice ? `<span class="pill agent">${esc(ROUTE_LABEL[r.choice] || r.choice)}</span>` : ""}</h2>
+    <h2>${esc(r?.name || recPath.name)} ${r?.choice ? `<span class="pill agent">${r.choice === "composio_managed" ? CMP + " " : ""}${esc(ROUTE_LABEL[r.choice] || r.choice)}</span>` : ""}</h2>
     <p>${explain(r?.reason || recPath.when_to_choose, g)}</p>
     <div class="route-facts">
       <div><span class="label">Cost</span><strong>${esc(r?.cost || "see below")}</strong></div>

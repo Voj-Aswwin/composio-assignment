@@ -1630,7 +1630,7 @@ async function logToolkitRequest(entry) {
 
 // ---------- http ----------
 
-const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json" };
+const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml" };
 
 async function readBody(req, limit = 1e6) {
   let data = "";
