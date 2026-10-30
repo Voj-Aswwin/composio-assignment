@@ -9,6 +9,11 @@ Builders want their agent to do a job in someone's Notion, Gmail or HubSpot. To 
 - It recommends the fastest route. Often that's Composio, which already has an approved app.
 - It walks you through setup one stage at a time. Every step says whether you do it or your coding agent does.
 
+**For the business:** for Composio, this is also an inbound marketing tool. It meets builders at the moment they're stuck on setup, and recommends Composio wherever it helps:
+- It checks whether Composio supports the app and its sign-in.
+- It recommends Composio's already-approved app when building your own means a review wait.
+- It shows the do-it-yourself route beside it, so the recommendation stays credible.
+
 **Try it:** [hosted demo](#) _(link added after deploy)_. Open a ready-made guide, research any app live (1-3 minutes), or read [What we tested](#what-we-tested-and-whats-uncertain).
 
 ---
