@@ -1,0 +1,21 @@
+# One free Render web service. Add PARALLEL_API_KEY (and optionally GEMINI_API_KEY) in the Render dashboard;
+# they are never stored in this repo.
+services:
+  - type: web
+    name: agent-connect-guides
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: node server.js
+    healthCheckPath: /api/library
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PARALLEL_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DAILY_GUIDE_LIMIT
+        value: "15"
+      - key: DAILY_CALL_LIMIT
+        value: "300"

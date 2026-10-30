@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Secrets: keep keys in .env, never in the repo
+.env
+.env.*
+!.env.example
+
+# OAuth tokens saved by the test agents
+.tokens.json
+*token*.json
+
+# Local data written while the app runs
+guides/*.json
+lessons.json
+toolkit-requests.json
+last-bad-reply.txt
+*.log
+
+# Not part of the demo
+test-agent/
+mockups/
+hubspot_add_lead.py
+
+# OS and editor files
+.DS_Store
+.vscode/
+.idea/
